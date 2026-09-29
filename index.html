@@ -1350,7 +1350,7 @@ function camAt(t) {
   const sa = sph(a.p, a.l), sb = sph(b.p, b.l);
   let dth = sb.th - sa.th; if (dth > Math.PI) dth -= 2 * Math.PI; if (dth < -Math.PI) dth += 2 * Math.PI;
   // live page: back off a little while the label column is showing so the card stays in frame
-  const rk = RECORD ? 1 : 1 + 0.3 * labelVis();
+  const rk = RECORD || labelMode(stage.clientWidth) === 'tiny' ? 1 : 1 + 0.3 * labelVis();
   const r = rk * Math.exp(lerp(Math.log(sa.r), Math.log(sb.r), u)), th = sa.th + dth * u, ph = lerp(sa.ph, sb.ph, u);
   return { p: [l[0] + r * Math.sin(ph) * Math.sin(th), l[1] + r * Math.cos(ph), l[2] + r * Math.sin(ph) * Math.cos(th)], l };
 }
