@@ -78,6 +78,7 @@ button{font:inherit;color:inherit}
 #ripple{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid #fff;pointer-events:none;z-index:49;opacity:0}
 
 #panel{background:var(--panel);border-left:1px solid var(--line);padding:16px 20px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+#panel>*{flex-shrink:0}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .sec-head .r{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
 .sec-head .r b{color:var(--text)}
@@ -1345,6 +1346,8 @@ const director = {
   begin(a) {
     const b = { ...a };
     if ('show' in a) { this.visT = this.t; this.vis = a.show ? 1 : 0; return; }
+    const target = a.move ? (a.move[0] === 'slider' ? ui[a.move[1]] : a.move[0] === 'el' ? $(a.move[1]) : null) : null;
+    if (target && !RECORD) target.scrollIntoView({ block: 'nearest' });
     if (a.move) {
       b.from = { ...this.cur };
       if (a.move[0] === 'slider') b.to = thumbXY(ui[a.move[1]], +ui[a.move[1]].value);
