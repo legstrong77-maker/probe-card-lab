@@ -27,11 +27,20 @@ button{font:inherit;color:inherit}
 #gl:active{cursor:grabbing}
 #leaders{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #labels{position:absolute;inset:0;pointer-events:none}
-.lbl{position:absolute;left:0;top:0;width:258px;padding:7px 10px 8px 11px;border-left:2px solid var(--line2);background:linear-gradient(90deg,rgba(9,13,20,.9),rgba(9,13,20,.5));transform:translate(-9999px,0)}
+.lbl{position:absolute;left:0;top:0;width:max-content;padding:6px 10px 7px 10px;border-left:2px solid var(--line2);background:rgba(9,13,20,.86);border-radius:0 6px 6px 0;transform:translate(-9999px,0)}
+.lbl.flip{border-left:0;border-right:2px solid var(--line2);border-radius:6px 0 0 6px}
+.lbl.dis.flip{border-right-color:var(--dis)}
 .lbl .t{font-size:14px;font-weight:700;white-space:nowrap}
 .lbl .t small{font-weight:500;color:var(--muted);font-size:11.5px;margin-left:6px}
-.lbl .d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.35}
-.lbl.dis{border-left-color:var(--dis);background:linear-gradient(90deg,rgba(18,40,62,.94),rgba(9,13,20,.55))}
+.lbl .d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.35;white-space:nowrap}
+#labels[data-mode=compact] .lbl{padding:4px 9px 5px}
+#labels[data-mode=compact] .lbl .d{display:none}
+#labels[data-mode=compact] .lbl .t{font-size:13px}
+#labels[data-mode=tiny] .lbl{padding:3px 7px 3px 7px}
+#labels[data-mode=tiny] .lbl .d,#labels[data-mode=tiny] .lbl .t small,#labels[data-mode=tiny] .tag.mate{display:none}
+#labels[data-mode=tiny] .lbl .t{font-size:11.5px}
+#labels[data-mode=tiny] .tag{font-size:8px;padding:2px 3px 1px;margin-left:5px;vertical-align:1px}
+.lbl.dis{border-left-color:var(--dis);background:rgba(16,34,52,.9)}
 .tag{display:inline-block;font:700 9.5px/1 var(--mono);letter-spacing:.8px;color:#06140c;background:var(--dis);padding:3px 5px 2px;border-radius:3px;margin-left:7px;vertical-align:2px}
 .tag.mate{background:#3a4456;color:#cfd7e3}
 
@@ -82,7 +91,7 @@ button{font:inherit;color:inherit}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .sec-head .r{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
 .sec-head .r b{color:var(--text)}
-#scope{width:100%;height:292px;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
+#scope{width:100%;aspect-ratio:560/292;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
 .cmp{display:grid;grid-template-columns:128px 1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
 .cmp>div{padding:5px 12px;border-bottom:1px solid var(--line);font:600 13px/1.3 var(--mono);display:flex;align-items:center;min-height:32px}
 .cmp>div:nth-last-child(-n+3){border-bottom:0}
@@ -129,20 +138,41 @@ html.rec #gl{cursor:default}
 
 @media (max-width:1100px){
   body{overflow:auto}
-  #app{grid-template-columns:1fr;grid-template-rows:62vh auto;height:auto}
-  #stage{height:62vh}
-  #panel{border-left:0;border-top:1px solid var(--line)}
+  #app{display:block;height:auto}
+  #stage{height:62vh;height:62svh;min-height:340px}
+  #gl{touch-action:pan-y}
+  #panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .controls{order:1} #planLine{order:2} #hScope{order:3} #scope{order:4} .cmp{order:5} #hChart{order:6} #chart{order:7} .foot{order:8}
   .hud{transform:scale(.8);transform-origin:top right}
-  .brand h1{font-size:22px} .brand p{display:none}
+  .brand{left:16px;top:14px} .brand h1{font-size:22px} .brand p{display:none}
   #phases{left:12px;bottom:12px}.ph{width:auto;padding:6px 7px}
-  .lbl{width:200px}
+  #caption{bottom:74px} #caption .zh{font-size:24px} #caption .en{font-size:14px}
+  #cursor,#ripple{display:none}
 }
 @media (max-width:560px){
-  #panel{padding:14px 16px}
-  .controls{grid-template-columns:1fr}
-  .cmp{grid-template-columns:96px 1fr 1fr}
+  #stage{height:60vh;height:60svh}
+  #panel{padding:14px 14px}
+  .controls{grid-template-columns:1fr;gap:12px}
+  .cmp{grid-template-columns:92px 1fr 1fr}
+  .cmp>div{padding:5px 8px;font-size:12px}
   .hud{display:none}
-  #caption .zh{font-size:20px}
+  .eyebrow{font-size:9.5px;letter-spacing:1.6px}
+  .brand h1{font-size:19px;margin:6px 0 0}
+  #phases{left:8px;right:8px;bottom:8px;gap:3px}
+  .ph{flex:1;padding:4px 5px;font-size:8px;letter-spacing:.4px}
+  .ph small{font-size:10px;margin-top:1px}
+  #caption{bottom:52px;width:96%} #caption .zh{font-size:17px;letter-spacing:.3px} #caption .en{font-size:11.5px;margin-top:4px}
+  #speed{left:auto;right:10px;top:12px;transform:none;font-size:9.5px;padding:5px 9px;letter-spacing:.8px}
+  #toasts{top:48px;width:94%}
+  .toast{font-size:12.5px;padding:7px 10px} .toast small{font-size:10.5px}
+  #endcard .big{font-size:24px} #endcard .en{font-size:14px} #endcard .by{font-size:10px}
+  .sec-head{flex-wrap:wrap}
+  #planLine{white-space:normal}
+}
+@media (pointer:coarse){
+  input[type=range]{height:32px}
+  input[type=range]::-webkit-slider-thumb{width:26px;height:26px;margin-top:-10px}
+  .seg button,.tog,.btn{padding:10px 12px;font-size:13px}
 }
 </style>
 <script type="importmap">
@@ -191,7 +221,7 @@ html.rec #gl{cursor:default}
   </div>
 
   <aside id="panel">
-    <div class="sec-head"><span class="eyebrow">Microscope · 針尖顯微（同一過驅量）</span><span class="r">chuck Z <b id="zNow">0</b> μm</span></div>
+    <div class="sec-head" id="hScope"><span class="eyebrow">Microscope · 針尖顯微（同一過驅量）</span><span class="r">chuck Z <b id="zNow">0</b> μm</span></div>
     <canvas id="scope"></canvas>
     <div class="cmp">
       <div class="k"></div><div class="h c">CANTILEVER<small>懸臂式 · 環氧環</small></div><div class="h v">VERTICAL<small>垂直式 · 導板</small></div>
@@ -200,7 +230,7 @@ html.rec #gl{cursor:default}
       <div class="k">CRES<small>接觸電阻</small></div><div id="rC">—</div><div id="rV">—</div>
       <div class="k">Stress<small>應力 / 降伏</small></div><div><span id="pC">0%</span><span class="bar"><i id="bC"></i></span></div><div><span id="pV">0%</span><span class="bar"><i id="bV"></i></span></div>
     </div>
-    <div class="sec-head"><span class="eyebrow">Force vs overdrive · 針壓曲線</span><span class="r">simplified model</span></div>
+    <div class="sec-head" id="hChart"><span class="eyebrow">Force vs overdrive · 針壓曲線</span><span class="r">simplified model</span></div>
     <canvas id="chart"></canvas>
     <div id="planLine"></div>
     <div class="controls">
@@ -849,32 +879,51 @@ const leaderEls = LABELS.map((L) => {
   return { g, path, dot };
 });
 const _v = new THREE.Vector3(), _rv = new THREE.Vector3();
+const labelBox = $('#labels');
+function labelVis() { return labelT * ease((exS - 0.5) / 0.3); }
+function labelMode(W) { return W < 640 ? 'tiny' : W < 1100 ? 'compact' : 'full'; }
+function toScreen(x, y, z, W, H) { _v.set(x, y, z).project(camera); return { x: (_v.x + 1) / 2 * W, y: (1 - _v.y) / 2 * H, ok: _v.z < 1 }; }
 function updateLabels(Y, W, H) {
-  const op = labelT * ease((exS - 0.5) / 0.3);
-  $('#labels').style.opacity = op; $('#leaders').style.opacity = op;
+  const op = labelVis();
+  labelBox.style.opacity = op; $('#leaders').style.opacity = op;
   if (op < 0.01) return;
+  const mode = labelMode(W);
+  if (labelBox.dataset.mode !== mode) labelBox.dataset.mode = mode;
   _rv.setFromMatrixColumn(camera.matrixWorld, 0); _rv.y = 0; _rv.normalize();
+  // horizontal extent of the whole model on screen
+  let minX = 1e9, maxX = -1e9;
+  for (const [r, y] of [[8.95, Yc.pcbT + POGO_H + Y.pogo], [R_PCB, Yc.pcbB + Y.pcb], [R_PCB, Yc.pcbT + Y.pcb], [7.1, 0], [7.1, -0.66]]) {
+    for (const sg of [-1, 1]) { const q = toScreen(sg * _rv.x * r, y, sg * _rv.z * r, W, H); minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); }
+  }
+  const side = W - maxX >= minX ? 1 : -1;
+  const hudEl = $('.hud'), hudOn = hudEl.offsetParent !== null;
+  const sr = stage.getBoundingClientRect(), hr = hudEl.getBoundingClientRect();
+  const hud = { l: hr.left - sr.left - 10, r: hr.right - sr.left + 10, b: hr.bottom - sr.top + 8 };
+  const top = mode === 'tiny' ? 70 : 14, bottom = H - (mode === 'tiny' ? 54 : 78), gap = mode === 'full' ? 8 : 5;
   const items = LABELS.map((L, i) => {
-    _v.set(_rv.x * L.r, L.y(Y), _rv.z * L.r);
-    if (L.id === 'wafer') _v.y = sim.z * UM;
-    const d = _v.clone().project(camera);
-    return { i, sx: (d.x + 1) / 2 * W, sy: (1 - d.y) / 2 * H, ok: d.z < 1 };
+    const q = toScreen(_rv.x * L.r, L.id === 'wafer' ? sim.z * UM : L.y(Y), _rv.z * L.r, W, H);
+    const el = labelEls[i];
+    return { i, sx: q.x, sy: q.y, ok: q.ok, w: el.offsetWidth, h: el.offsetHeight };
   }).sort((a, b) => a.sy - b.sy);
-  const sr = stage.getBoundingClientRect(), hr = $('.hud').getBoundingClientRect();
-  const hud = { l: hr.left - sr.left - 12, b: hr.bottom - sr.top + 8 };
-  let lastY = -1e9;
   for (const it of items) {
-    let lx = clamp(it.sx + 70, 12, W - 272);
-    let ly = it.sy - 20;
-    if (ly < lastY + 54) ly = lastY + 54;
-    lastY = ly;
-    if (ly < hud.b && lx + 258 > hud.l) lx = Math.max(12, hud.l - 258);
+    let lx = mode === 'tiny'
+      ? (side > 0 ? it.sx + 16 : it.sx - 16 - it.w)
+      : (side > 0 ? Math.max(maxX + 22, it.sx + 36) : Math.min(minX - 22 - it.w, it.sx - 36 - it.w));
+    lx = clamp(lx, 6, W - it.w - 6);
+    it.lx = lx;
+    it.minY = hudOn && lx + it.w > hud.l && lx < hud.r ? hud.b : top;
+  }
+  let prev = -1e9;
+  for (const it of items) { it.ly = Math.max(it.sy - it.h / 2, prev + gap, it.minY); prev = it.ly + it.h; }
+  const over = prev - bottom;
+  if (over > 0) for (const it of items) it.ly = Math.max(it.minY, it.ly - over);
+  for (const it of items) {
     const el = labelEls[it.i], ld = leaderEls[it.i];
     if (!it.ok) { el.style.transform = 'translate(-9999px,0)'; ld.g.style.display = 'none'; continue; }
     ld.g.style.display = '';
-    el.style.transform = `translate(${lx.toFixed(1)}px,${ly.toFixed(1)}px)`;
-    const ex = lx - 2, ey = ly + 20;
-    const mx = lx - 24;
+    el.classList.toggle('flip', side < 0);
+    el.style.transform = `translate(${it.lx.toFixed(1)}px,${it.ly.toFixed(1)}px)`;
+    const ey = it.ly + it.h / 2, ex = side > 0 ? it.lx : it.lx + it.w, mx = ex - side * 12;
     ld.path.setAttribute('d', `M${it.sx.toFixed(1)},${it.sy.toFixed(1)} L${mx.toFixed(1)},${ey.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}`);
     ld.dot.setAttribute('cx', it.sx.toFixed(1)); ld.dot.setAttribute('cy', it.sy.toFixed(1));
   }
@@ -954,8 +1003,8 @@ function fitCanvas(cv) {
   return { w: r.width, h: r.height, d };
 }
 function drawScope() {
-  const { w, h, d } = fitCanvas(scope), g = sctx;
-  g.setTransform(d, 0, 0, d, 0, 0);
+  const fit = fitCanvas(scope), g = sctx, k = fit.w / 560, w = 560, h = 292;
+  g.setTransform(fit.d * k, 0, 0, fit.d * k, 0, 0);
   g.fillStyle = '#070a10'; g.fillRect(0, 0, w, h);
   g.strokeStyle = 'rgba(255,255,255,.035)'; g.lineWidth = 1;
   for (let x = 0; x < w; x += 20) { g.beginPath(); g.moveTo(x + 0.5, 0); g.lineTo(x + 0.5, h); g.stroke(); }
@@ -1004,8 +1053,6 @@ function drawTip(g, x0, w, h, type) {
     drawPad(g, cx - q * slide, surfY, padW, type, sim.prevMark[type], XS);
     drawPad(g, cx + (1 - q) * slide, surfY, padW, type, 0, XS);
   } else drawPad(g, cx, surfY, padW, type, sim.mark[type], XS);
-  g.fillStyle = 'rgba(141,152,170,.75)'; g.font = '500 10px JetBrains Mono, monospace';
-  g.fillText('Al pad · 60 μm', cx - 40, surfY + 62);
   const tipY = Math.min(yC - st.off * YS, surfY);
   const tipX = tipRestX + (st.od > 0 ? st.scrub * XS : 0);
   g.lineCap = 'round'; g.lineJoin = 'round';
@@ -1063,7 +1110,7 @@ function drawTip(g, x0, w, h, type) {
   // pad top-view inset
   const bx = x0 + w - 80, by = 8, bs = 72;
   g.fillStyle = 'rgba(10,14,21,.95)'; g.fillRect(bx, by, bs, bs); g.strokeStyle = '#243041'; g.lineWidth = 1; g.strokeRect(bx + 0.5, by + 0.5, bs - 1, bs - 1);
-  g.fillStyle = 'rgba(141,152,170,.8)'; g.font = '500 8.5px JetBrains Mono, monospace'; g.fillText('PAD TOP', bx + 5, by + 11);
+  g.fillStyle = 'rgba(141,152,170,.8)'; g.font = '500 8.5px JetBrains Mono, monospace'; g.fillText('PAD · 60 μm', bx + 5, by + 11);
   const ps = 50, pxs = ps / PAD, pxl = bx + 11, pyt = by + 16;
   g.fillStyle = '#9aa5b3'; g.fillRect(pxl, pyt, ps, ps);
   const mk = sim.indexQ < 1 ? sim.prevMark[type] : sim.mark[type];
@@ -1101,6 +1148,7 @@ function drawChart() {
   g.fillStyle = '#4cc9f0'; g.beginPath(); g.moveTo(X(S.od), t + H); g.lineTo(X(S.od) - 5, t + H + 7); g.lineTo(X(S.od) + 5, t + H + 7); g.fill();
 }
 function drawWaferMap() {
+  if (wmap.offsetParent === null) return;          // HUD hidden on phones
   const { w, h, d } = fitCanvas(wmap), g = wctx;
   g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h);
   const k = (w - 6) / (2 * WR), c = w / 2;
@@ -1193,7 +1241,14 @@ ui.tCut.addEventListener('click', () => { S.cut = !S.cut; ui.tCut.classList.togg
 ui.tTrace.addEventListener('click', () => { S.trace = !S.trace; ui.tTrace.classList.toggle('on', S.trace); });
 ui.tLabels.addEventListener('click', () => { S.labels = !S.labels; ui.tLabels.classList.toggle('on', S.labels); });
 ui.replace.addEventListener('click', () => { sim.dmg.cant = sim.dmg.vert = false; sim.flags = {}; toast('✓ 已換上新探針', 'Fresh probes installed — planarity restored', 'ok'); });
-ui.tour.addEventListener('click', () => { director.on ? director.stop() : director.start(); });
+// iOS only lets a media element make sound after a tap: unlock one element on the tour tap, then reuse it for every line
+const voiceEl = new Audio();
+voiceEl.preload = 'auto';
+function unlockVoice() {
+  voiceEl.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  voiceEl.play().catch(() => {});
+}
+ui.tour.addEventListener('click', () => { if (director.on) director.stop(); else { unlockVoice(); director.start(); } });
 function setSlider(inp, v) { inp.value = v; inp.dispatchEvent(new Event('input')); }
 function applyState(o) {
   if ('od' in o) setSlider(ui.od, o.od);
@@ -1205,9 +1260,12 @@ function applyState(o) {
   if ('trace' in o) { S.trace = o.trace; ui.tTrace.classList.toggle('on', S.trace); }
   if ('labels' in o) { S.labels = o.labels; ui.tLabels.classList.toggle('on', S.labels); }
 }
-for (const el of [canvas, $('#panel')]) {
-  el.addEventListener('pointerdown', (e) => { if (e.isTrusted && director.on && !RECORD && !ui.tour.contains(e.target)) director.stop(); }, true);
-}
+// the tour hands control back when someone actually uses a control or drags the model — not when they just scroll
+$('#panel').addEventListener('pointerdown', (e) => { if (e.isTrusted && director.on && !RECORD && e.target.closest('input,button') && !ui.tour.contains(e.target)) director.stop(); }, true);
+let downAt = null;
+canvas.addEventListener('pointerdown', (e) => { downAt = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener('pointermove', (e) => { if (downAt && director.on && !RECORD && Math.abs(e.clientX - downAt.x) > 12) { downAt = null; director.stop(); } });
+window.addEventListener('pointerup', () => { downAt = null; });
 canvas.addEventListener('wheel', (e) => { if (director.on && !RECORD) director.stop(); }, { passive: true });
 $('#endcard').addEventListener('click', () => { $('#endcard').style.opacity = 0; $('#endcard').style.pointerEvents = 'none'; });
 
@@ -1291,7 +1349,9 @@ function camAt(t) {
   const l = [lerp(a.l[0], b.l[0], u), lerp(a.l[1], b.l[1], u), lerp(a.l[2], b.l[2], u)];
   const sa = sph(a.p, a.l), sb = sph(b.p, b.l);
   let dth = sb.th - sa.th; if (dth > Math.PI) dth -= 2 * Math.PI; if (dth < -Math.PI) dth += 2 * Math.PI;
-  const r = Math.exp(lerp(Math.log(sa.r), Math.log(sb.r), u)), th = sa.th + dth * u, ph = lerp(sa.ph, sb.ph, u);
+  // live page: back off a little while the label column is showing so the card stays in frame
+  const rk = RECORD ? 1 : 1 + 0.3 * labelVis();
+  const r = rk * Math.exp(lerp(Math.log(sa.r), Math.log(sb.r), u)), th = sa.th + dth * u, ph = lerp(sa.ph, sb.ph, u);
   return { p: [l[0] + r * Math.sin(ph) * Math.sin(th), l[1] + r * Math.cos(ph), l[2] + r * Math.sin(ph) * Math.cos(th)], l };
 }
 function thumbXY(inp, v) {
@@ -1313,7 +1373,7 @@ const director = {
   },
   stop() {
     this.on = false; controls.enabled = true; ui.tour.textContent = '▶ Guided tour 導覽';
-    if (this.voice) { this.voice.pause(); this.voice = null; }
+    voiceEl.pause();
     controls.target.set(...this.camL); controls.update();
     cursorEl.style.opacity = 0; rippleEl.style.opacity = 0; $('#caption').style.opacity = 0;
     for (const inp of [ui.od, ui.warp, ui.rate, ui.explode]) inp.classList.remove('grab');
@@ -1324,7 +1384,7 @@ const director = {
     while (this.ai < ACTS.length && ACTS[this.ai].t <= t) { this.begin(ACTS[this.ai]); this.ai++; }
     if (NARR && !RECORD) while (this.li < NARR.lines.length && NARR.lines[this.li].t <= t) {
       const l = NARR.lines[this.li++];
-      if (t - l.t < 0.5) { this.voice = new Audio(l.src); this.voice.play().catch(() => {}); }
+      if (t - l.t < 0.5) { voiceEl.src = l.src; voiceEl.play().catch(() => {}); }
     }
     for (let i = this.run.length - 1; i >= 0; i--) {
       const a = this.run[i], u = clamp((t - a.t) / a.d, 0, 1);
@@ -1347,7 +1407,12 @@ const director = {
     const b = { ...a };
     if ('show' in a) { this.visT = this.t; this.vis = a.show ? 1 : 0; return; }
     const target = a.move ? (a.move[0] === 'slider' ? ui[a.move[1]] : a.move[0] === 'el' ? $(a.move[1]) : null) : null;
-    if (target && !RECORD) target.scrollIntoView({ block: 'nearest' });
+    const P = $('#panel');
+    if (target && !RECORD && P.scrollHeight > P.clientHeight + 1 && getComputedStyle(P).overflowY === 'auto') {
+      const pr = P.getBoundingClientRect(), tr = target.getBoundingClientRect();
+      if (tr.bottom > pr.bottom - 8) P.scrollTop += tr.bottom - pr.bottom + 24;
+      else if (tr.top < pr.top + 8) P.scrollTop -= pr.top - tr.top + 24;
+    }
     if (a.move) {
       b.from = { ...this.cur };
       if (a.move[0] === 'slider') b.to = thumbXY(ui[a.move[1]], +ui[a.move[1]].value);
@@ -1398,10 +1463,22 @@ const director = {
 /* ============================================================
    Main loop
    ============================================================ */
+let lensS = 0;
+function applyLens(W, H, dt) {
+  // keep the horizontal field of view once the stage gets narrower than 1.2:1, so phones see the whole card
+  const a = W / H;
+  camera.fov = a >= 1.2 ? 34 : 2 * Math.atan(Math.tan(17 * Math.PI / 180) * 1.2 / a) * 180 / Math.PI;
+  // slide the picture left to open a column for labels (live page only; the video keeps its framing)
+  const want = RECORD || labelMode(W) === 'tiny' ? 0 : Math.min(W * 0.3, 330) * labelVis();
+  lensS += (want - lensS) * (1 - Math.exp(-dt * 6));
+  if (lensS < 0.5) { camera.clearViewOffset(); camera.aspect = a; }
+  else { camera.aspect = (W + lensS) / H; camera.setViewOffset(W + lensS, H, lensS, 0, W, H); }
+  camera.updateProjectionMatrix();
+}
 function resize() {
   const r = stage.getBoundingClientRect();
   renderer.setSize(r.width, r.height, false);
-  camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+  applyLens(r.width, r.height, 10);
 }
 window.addEventListener('resize', resize);
 function frame(dt, render = true) {
@@ -1423,8 +1500,9 @@ function frame(dt, render = true) {
   if (!director.on) controls.update();
   const Y = layerY();
   updateScene(Y);
-  renderer.render(scene, camera);
   const r = stage.getBoundingClientRect();
+  applyLens(r.width, r.height, dt);
+  renderer.render(scene, camera);
   updateLabels(Y, r.width, r.height);
   drawScope(); drawChart(); drawWaferMap(); updateDOM(); updateToasts();
   if (director.on || RECORD) director.overlay();
@@ -1446,9 +1524,14 @@ if (RECORD) {
 } else {
   applyState({ explode: 0.72, trace: true });
   exS = 0.72;
-  camera.position.set(21, 8.2, 29); controls.target.set(2.4, 3.8, 0); controls.update();
+  camera.position.set(25, 9.6, 35); controls.target.set(0.4, 3.6, 0); controls.update();
   let last = performance.now();
-  const loop = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; frame(dt); requestAnimationFrame(loop); };
+  let failed = false;
+  const loop = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    try { frame(dt); } catch (e) { if (!failed) { failed = true; console.error(e); } }   // one bad frame must not stop the page
+    requestAnimationFrame(loop);
+  };
   requestAnimationFrame(loop);
 }
 </script>
