@@ -1,21 +1,36 @@
 """Narration for the guided tour.
 
-  python narration.py tts   # synthesize lines (edge-tts), retime the tour, write narration.js / narration.json
+  python narration.py tts   # synthesize lines, retime the tour, write narration.js / narration.json
   python narration.py mix   # mux narration into build/silent.mp4 -> probe-card-lab.mp4
+
+Voice: Gemini 3.8 Flash TTS (voice Kore). Each line gets two takes; local faster-whisper transcribes
+them and the take closest to the script wins (up to four takes if both misread). The API key comes
+from GEMINI_API_KEY or a `.env` file in this folder or any parent — it is never stored in the repo.
+Set NARR_ENGINE=edge to fall back to edge-tts (zh-TW-HsiaoChenNeural).
 
 Each line may carry `at` (a time on the original tour timeline). If the lines before it are still
 talking at that moment, the tour is stretched by inserting a pause at `ins` (default: `at`), so the
 picture always waits for the voice instead of the two drifting apart.
 """
-import asyncio, hashlib, json, os, subprocess, sys
-
-import edge_tts
+import hashlib, json, os, re, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.stdout.reconfigure(encoding="utf-8")
 AUDIO = os.path.join(HERE, "audio")
-VOICE, RATE = "zh-TW-HsiaoChenNeural", "+12%"
+TAKES_DIR = os.path.join(HERE, "build", "tts")
 GAP, LEAD = 0.18, 0.15          # pause between lines, delay after an anchor
+
+ENGINE = os.environ.get("NARR_ENGINE", "gemini")
+GEMINI_MODEL, GEMINI_VOICE = "gemini-3.8-flash-tts", "Kore"
+# Only the TRANSCRIPT is spoken. Plain "Say ...:" prompts get read aloud, and extra pronunciation
+# notes made the model ad-lib, so the notes stay short and about delivery only.
+STYLE = ("### DIRECTOR'S NOTES\n"
+         "Style: natural Taiwan Mandarin with a Taiwanese accent. A clear, confident, friendly young female host "
+         "of a semiconductor tech explainer video. Crisp articulation, brisk energetic pace, no long pauses.\n\n"
+         "### TRANSCRIPT\n")
+SPACING = 7.0        # free tier allows 10 requests/min per model
+TAKES, MAX_TAKES, CER_OK = 2, 4, 0.08
+EDGE_VOICE, EDGE_RATE = "zh-TW-HsiaoChenNeural", "+12%"
 
 LINES = [
     dict(at=0.3, zh="晶圓針測：探針卡一格一格地點測晶粒。", en="Wafer sort: a probe card testing the wafer, die by die."),
@@ -41,7 +56,8 @@ TAIL = 1.6           # hold after the last word
 
 
 def key(text):
-    return hashlib.sha1(f"{VOICE}|{RATE}|{text}".encode()).hexdigest()[:10]
+    who = f"gemini|{GEMINI_MODEL}|{GEMINI_VOICE}|{STYLE}" if ENGINE == "gemini" else f"edge|{EDGE_VOICE}|{EDGE_RATE}"
+    return hashlib.sha1(f"{who}|{text}".encode()).hexdigest()[:10]
 
 
 def duration(path):
@@ -49,31 +65,170 @@ def duration(path):
     return float(out.strip())
 
 
-async def synth_all():
+# ---------------------------------------------------------------- Gemini TTS + whisper check
+def gemini_key():
+    if os.environ.get("GEMINI_API_KEY"):
+        return os.environ["GEMINI_API_KEY"]
+    d = HERE
+    while True:
+        env = os.path.join(d, ".env")
+        if os.path.exists(env):
+            for ln in open(env, encoding="utf-8"):
+                if ln.startswith("GEMINI_API_KEY="):
+                    return ln.split("=", 1)[1].strip()
+        up = os.path.dirname(d)
+        if up == d:
+            sys.exit("GEMINI_API_KEY not found (env var or .env)")
+        d = up
+
+
+_last_call = [0.0]
+
+
+def gemini_synth(client, types, text):
+    import io, numpy as np, soundfile as sf
+    cfg = types.GenerateContentConfig(
+        response_modalities=["AUDIO"],
+        speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
+            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=GEMINI_VOICE))))
+    for attempt in range(8):
+        time.sleep(max(0.0, _last_call[0] + SPACING - time.time()))
+        _last_call[0] = time.time()
+        try:
+            r = client.models.generate_content(model=GEMINI_MODEL, contents=STYLE + text, config=cfg)
+            part = r.candidates[0].content.parts[0].inline_data
+            if part.data[:4] == b"RIFF":                       # WAV with header
+                pcm, rate = sf.read(io.BytesIO(part.data), dtype="float32")
+                return pcm, rate
+            mt, rate = part.mime_type or "", 24000
+            if "rate=" in mt:
+                rate = int(mt.split("rate=")[1].split(";")[0])
+            return np.frombuffer(part.data, dtype="<i2").astype(np.float32) / 32768.0, rate
+        except Exception as e:
+            msg = str(e)
+            m = re.search(r"retryDelay\W+(\d+(?:\.\d+)?)(ms|s)\b", msg)
+            wait = (float(m.group(1)) / (1000 if m.group(2) == "ms" else 1) + 2) if m else (30 if "429" in msg else 5)
+            if "PerDay" in msg:
+                sys.exit("Gemini TTS daily quota is used up — try again tomorrow or set NARR_ENGINE=edge")
+            wait = min(wait, 90)          # the key is shared with other projects; per-minute limits clear quickly
+            print(f"  retry {attempt + 1} in {wait}s: {type(e).__name__} {msg[:90]}", flush=True)
+            time.sleep(wait)
+    sys.exit("Gemini TTS failed repeatedly")
+
+
+DIG = dict(zip("0123456789", "零一二三四五六七八九"))
+
+
+def syllables(text):
+    """Toneless pinyin for Chinese, single letters for Latin, so ASR homophones don't count as misreads."""
+    from pypinyin import lazy_pinyin
+    text = re.sub(r"[0-9]", lambda m: DIG[m.group(0)], text)
+    out = []
+    for tok in re.findall(r"[A-Za-z]+|[^A-Za-z]+", text):
+        if tok.isascii() and tok.isalpha():
+            out += list(tok.lower())
+        else:
+            out += [p for p in (re.sub(r"[^a-z]", "", s.lower()) for s in lazy_pinyin(tok, errors="ignore")) if p]
+    return out
+
+
+def edit(a, b):
+    d = list(range(len(b) + 1))
+    for i, x in enumerate(a, 1):
+        prev, d[0] = d[0], i
+        for j, y in enumerate(b, 1):
+            prev, d[j] = d[j], min(d[j] + 1, d[j - 1] + 1, prev + (x != y))
+    return d[len(b)]
+
+
+def clean_to_mp3(wav_path, mp3_path):
+    """Trim silence at both ends, short fades, normalize, encode mono MP3."""
+    import numpy as np, soundfile as sf
+    w, sr = sf.read(wav_path, dtype="float32")
+    hop = int(sr * 0.01)
+    rms = np.array([np.sqrt(np.mean(w[i * hop:(i + 1) * hop] ** 2) + 1e-12) for i in range(len(w) // hop)])
+    db = 20 * np.log10(rms / (rms.max() + 1e-12))
+    v = np.where(db > -38)[0]
+    s0, s1 = (v[0] * hop, (v[-1] + 1) * hop) if len(v) else (0, len(w))
+    w = w[max(0, s0 - int(0.04 * sr)):min(len(w), s1 + int(0.12 * sr))].copy()
+    fi, fo = int(0.012 * sr), int(0.08 * sr)
+    w[:fi] *= np.linspace(0, 1, fi)
+    w[-fo:] *= np.linspace(1, 0, fo) ** 2
+    w = (w - w.mean()) * (0.89 / (np.abs(w).max() + 1e-9))
+    tmp = mp3_path + ".wav"
+    sf.write(tmp, w.astype(np.float32), sr, subtype="PCM_16")
+    subprocess.check_call(["ffmpeg", "-y", "-v", "error", "-i", tmp, "-ac", "1", "-c:a", "libmp3lame", "-q:a", "3", mp3_path])
+    os.remove(tmp)
+
+
+def synth_gemini(todo):
+    import soundfile as sf
+    from google import genai
+    from google.genai import types
+    from faster_whisper import WhisperModel
+    client = genai.Client(api_key=gemini_key())
+    asr = WhisperModel("large-v3", device="cuda", compute_type="float16")
+    os.makedirs(TAKES_DIR, exist_ok=True)
+    report = []
+    for l in todo:
+        k, ref = key(l["zh"]), syllables(l["zh"])
+        best = None
+        for t in range(MAX_TAKES):
+            wav = os.path.join(TAKES_DIR, f"{k}_t{t}.wav")
+            if not os.path.exists(wav):
+                pcm, rate = gemini_synth(client, types, l.get("tts", l["zh"]))
+                sf.write(wav, pcm, rate, subtype="PCM_16")
+            segs, _ = asr.transcribe(wav, language="zh", beam_size=5, initial_prompt="以下是繁體中文的句子。")
+            hyp = "".join(s.text for s in segs).strip()
+            cer = edit(ref, syllables(hyp)) / max(1, len(ref))
+            print(f"  take {t}  cer={cer:.2f}  {hyp}", flush=True)
+            if best is None or cer < best[0]:
+                best = (cer, wav, hyp)
+            if t + 1 >= TAKES and best[0] <= CER_OK:
+                break
+        clean_to_mp3(best[1], l["file"])
+        flag = "OK   " if best[0] <= CER_OK else "CHECK"
+        print(f"{flag} {l['zh']}  (cer {best[0]:.2f})", flush=True)
+        report.append(dict(zh=l["zh"], heard=best[2], cer=round(best[0], 3), flag=flag.strip()))
+    with open(os.path.join(HERE, "build", "tts_report.json"), "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=1)
+
+
+# ---------------------------------------------------------------- edge-tts fallback
+def synth_edge(todo):
+    import asyncio, edge_tts
+
+    async def run():
+        for l in todo:
+            for attempt in range(4):
+                try:
+                    await edge_tts.Communicate(l["zh"], EDGE_VOICE, rate=EDGE_RATE).save(l["file"])
+                    break
+                except Exception as e:  # edge-tts drops the connection now and then; retrying fixes it
+                    print("retry", attempt + 1, e)
+                    await asyncio.sleep(2)
+            else:
+                sys.exit(f"TTS failed: {l['zh']}")
+            print("synth", l["zh"])
+    asyncio.run(run())
+
+
+def synth_all():
     os.makedirs(AUDIO, exist_ok=True)
-    want = {f"{key(l['zh'])}.mp3" for l in LINES}
+    for l in LINES:
+        l["file"] = os.path.join(AUDIO, f"{key(l['zh'])}.mp3")
+    todo = [l for l in LINES if not os.path.exists(l["file"])]
+    if todo:
+        (synth_gemini if ENGINE == "gemini" else synth_edge)(todo)
+    # only clear the previous voice once every new line exists, so a failed run leaves the old narration working
+    want = {os.path.basename(l["file"]) for l in LINES}
     for f in os.listdir(AUDIO):
         if f.endswith(".mp3") and f not in want:
             os.remove(os.path.join(AUDIO, f))
-    for l in LINES:
-        path = os.path.join(AUDIO, f"{key(l['zh'])}.mp3")
-        l["file"] = path
-        if os.path.exists(path):
-            continue
-        for attempt in range(4):
-            try:
-                await edge_tts.Communicate(l["zh"], VOICE, rate=RATE).save(path)
-                break
-            except Exception as e:  # edge-tts drops the connection now and then; retrying fixes it
-                print("retry", attempt + 1, e)
-                await asyncio.sleep(2)
-        else:
-            sys.exit(f"TTS failed: {l['zh']}")
-        print("synth", l["zh"])
 
 
 def tts():
-    asyncio.run(synth_all())
+    synth_all()
     retime = []                                            # [(original t, extra seconds)]
     T = lambda t: t + sum(e for a, e in retime if t >= a)
     cursor, out = 0.0, []
