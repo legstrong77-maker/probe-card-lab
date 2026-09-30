@@ -41,9 +41,9 @@ class Poly extends THREE.Curve {                      // a polyline sampled by a
 }
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 
-export function createStage(canvas, { record = false } = {}) {
+export function createStage(canvas, { record = false, dpr = 1 } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: record, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(record ? 1 : Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(record ? dpr : Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   renderer.localClippingEnabled = true;
   const scene = new THREE.Scene();

@@ -81,10 +81,11 @@ def tts():
     print(f"{len(out)} lines, tour length {end:.1f}s")
 
 
-def mix():
+def mix(name=""):
+    sfx = "-" + name if name else ""
     data = json.load(open(os.path.join(HERE, "narration.json"), encoding="utf-8"))
-    silent, final = os.path.join(HERE, "build", "silent.mp4"), os.path.join(HERE, "ft-board-lab.mp4")
-    cmd, parts = ["ffmpeg", "-y", "-v", "error", "-i", silent], []
+    silent, final = os.path.join(HERE, "build", f"silent{sfx}.mp4"), os.path.join(HERE, f"ft-board-lab{sfx}.mp4")
+    cmd, parts = ["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", silent], []
     for i, l in enumerate(data["lines"]):
         cmd += ["-i", os.path.join(HERE, l["src"])]
         ms = int(l["t"] * 1000)
@@ -97,4 +98,4 @@ def mix():
 
 
 if __name__ == "__main__":
-    {"tts": tts, "mix": mix}[sys.argv[1] if len(sys.argv) > 1 else "tts"]()
+    {"tts": tts, "mix": mix}[sys.argv[1] if len(sys.argv) > 1 else "tts"](*sys.argv[2:3])

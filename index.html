@@ -282,6 +282,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const RECORD = new URLSearchParams(location.search).has('record');
+const REC_DPR = +new URLSearchParams(location.search).get('dpr') || 1;      // recording only: render at this pixel ratio
 if (RECORD) document.documentElement.classList.add('rec');
 const $ = (s) => document.querySelector(s);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -469,7 +470,7 @@ function kinematics() {
    ============================================================ */
 const stage = $('#stage'), canvas = $('#gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: RECORD, powerPreference: 'high-performance' });
-renderer.setPixelRatio(RECORD ? 1 : Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(RECORD ? REC_DPR : Math.min(devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.localClippingEnabled = true;
@@ -1043,7 +1044,7 @@ const scope = $('#scope'), sctx = scope.getContext('2d');
 const chart = $('#chart'), cctx = chart.getContext('2d');
 const wmap = $('#wmap'), wctx = wmap.getContext('2d');
 function fitCanvas(cv) {
-  const r = cv.getBoundingClientRect(), d = RECORD ? 1 : Math.min(devicePixelRatio, 2);
+  const r = cv.getBoundingClientRect(), d = RECORD ? REC_DPR : Math.min(devicePixelRatio, 2);
   const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
   if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
   return { w: r.width, h: r.height, d };

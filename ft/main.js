@@ -4,6 +4,7 @@ import { createStage, MMW, Y, EX, TRAYS, PCB, THEAD, POGO_Z, PITCH } from './sce
 import { PIN, WARP_LIMIT, BALLS, REAL_BALLS, force, cres, DEFECT, falseFail, DIRT_PER_INS, CLEAN_DUE, MOVE, SORT, MSE, HANDLER_UPH, testTimeN, cycleT, uphOf, phaseEdges, testFromSlider, sliderFromTest, idxFromSlider, sliderFromIdx, hash } from './model.js';
 
 const RECORD = new URLSearchParams(location.search).has('record');
+const REC_DPR = +new URLSearchParams(location.search).get('dpr') || 1;      // recording only: render at this pixel ratio
 if (RECORD) document.documentElement.classList.add('rec');
 const $ = (s) => document.querySelector(s);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -12,7 +13,7 @@ const ease = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 const ease5 = (t) => { t = clamp(t, 0, 1); return t * t * t * (t * (t * 6 - 15) + 10); };
 
 const stageEl = $('#stage'), canvas = $('#gl');
-const stage = createStage(canvas, { record: RECORD });
+const stage = createStage(canvas, { record: RECORD, dpr: REC_DPR });
 const { camera, controls } = stage;
 
 /* ============================================================
@@ -191,7 +192,7 @@ const chart = $('#chart'), cctx = chart.getContext('2d');
 const uphCv = $('#uph'), uctx = uphCv.getContext('2d');
 const bins = $('#bins'), bctx = bins.getContext('2d');
 function fitCanvas(cv) {
-  const r = cv.getBoundingClientRect(), d = RECORD ? 1 : Math.min(devicePixelRatio, 2);
+  const r = cv.getBoundingClientRect(), d = RECORD ? REC_DPR : Math.min(devicePixelRatio, 2);
   const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
   if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
   return { w: r.width, h: r.height, d };
