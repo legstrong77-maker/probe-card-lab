@@ -65,10 +65,10 @@ function toast(msg, kind = '') {
 }
 
 /* ---------------- level setup ---------------- */
-function kindOf(cardId) { return cardId === 'cobraHP' ? 'cobra' : cardId; }
+function kindOf(cardId) { return cardId === 'cobraHP' ? 'cobra' : cardId === 'memsLF' ? 'mems' : cardId; }
 function enterLevel(L) {
   G.L = L; G.cardId = L.cards[0]; G.tests = 3; G.reworkOn = false; G.speed = 1;
-  G.rec = { od: L.od[2], clean: L.clean ? L.clean[2] : 0, soak: L.soak ? L.soak[2] : 0 };
+  G.rec = { od: L.od[2], clean: L.clean ? L.clean[2] : 0, soak: L.soak ? L.soak[2] : 0, clamp: L.power ? L.power.clamp[2] : 0, screen: false };
   const T = TEXT[L.id];
   $('#hNo').textContent = 'L' + L.n; $('#hZh').textContent = L.zh; $('#hGoal').textContent = T.goal;
   // probe card choice
@@ -82,8 +82,12 @@ function enterLevel(L) {
   if (L.clean) ctl.push(slider('clean', '清針間隔', '每幾次下針清一次', L.clean[0], L.clean[1], 5, (v) => '每 ' + v + ' 次'));
   if (L.soak) ctl.push(slider('soak', '預熱', '開始前先讓卡靠著熱載台', L.soak[0], L.soak[1], 5, (v) => v + ' 秒'));
   if (L.rework) ctl.push(`<div class="ctl"><button class="btn sm" id="reworkBtn" style="width:100%">送回整平載板（多花 ${L.rework.t} 秒）</button></div>`);
+  if (L.power) {
+    ctl.push(slider('clamp', '電流上限', `全速測試需要 ${L.power.need} A`, L.power.clamp[0], L.power.clamp[1], 5, (v) => v + ' A'));
+    ctl.push(`<div class="ctl"><button class="btn sm" id="screenBtn" style="width:100%">先用低電壓篩短路（每次多 ${L.power.screenT} 秒）</button></div>`);
+  }
   $('#ctls').innerHTML = ctl.join('');
-  for (const k of ['od', 'clean', 'soak']) {
+  for (const k of ['od', 'clean', 'soak', 'clamp']) {
     const el = $('#s_' + k); if (!el) continue;
     const upd = () => { G.rec[k] = +el.value; $('#o_' + k).textContent = el._fmt(+el.value); el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%'); };
     el._fmt = SL[k]; el.value = G.rec[k]; upd();
@@ -93,7 +97,12 @@ function enterLevel(L) {
     if (G.running) return; G.reworkOn = !G.reworkOn; audio.play('click');
     $('#reworkBtn').classList.toggle('pri', G.reworkOn); $('#reworkBtn').textContent = G.reworkOn ? `✓ 已排入整平（+${L.rework.t} 秒）` : `送回整平載板（多花 ${L.rework.t} 秒）`;
   });
-  $('#gLoad').classList.toggle('hide', !L.loadLimit); $('#gDirt').classList.toggle('hide', !L.clean); $('#gWarm').classList.toggle('hide', !L.thermal);
+  if (L.power) $('#screenBtn').addEventListener('click', () => {
+    G.rec.screen = !G.rec.screen; audio.play('click');
+    $('#screenBtn').classList.toggle('pri', G.rec.screen); $('#screenBtn').textContent = G.rec.screen ? `✓ 先篩短路，再送全功率（+${L.power.screenT} 秒）` : `先用低電壓篩短路（每次多 ${L.power.screenT} 秒）`;
+  });
+  $('#gLoad').classList.toggle('hide', !L.loadLimit); $('#gDirt').classList.toggle('hide', !L.clean); $('#gWarm').classList.toggle('hide', !L.thermal); $('#gAmp').classList.toggle('hide', !L.power);
+  $('#padsLbl').firstChild.textContent = L.bump ? '凸塊上的針痕' : '針痕';
   document.querySelectorAll('.speed .btn').forEach((b) => b.classList.toggle('on', b.dataset.sp === '1'));
   show('hud'); newRun(); audio.setMood('tune');
 }
@@ -102,7 +111,7 @@ function slider(k, zh, hint, min, max, stepv, fmt) {
   SL[k] = fmt;
   return `<div class="ctl"><div class="l"><span>${zh}<small>${hint}</small></span><output id="o_${k}"></output></div><input type="range" id="s_${k}" min="${min}" max="${max}" step="${stepv}"></div>`;
 }
-function info() { const c = CARDS[G.cardId]; return { flat: G.run.flat, slide: c.slide, contact: c.contact }; }
+function info() { const c = CARDS[G.cardId]; return { flat: G.run.flat, slide: c.slide, contact: c.contact, force: c.force }; }
 function newRun() {
   const L = G.L; G.token++; G.running = false; G.paused = false; G.pending = false; G.flags = {}; G.lastC = null;
   G.run = createRun(L, G.cardId, 1);
@@ -118,7 +127,7 @@ function setGauge(id, txt, cls) { const o = $('#' + id + ' output'); o.textConte
 function previewGauges(blank) {
   const L = G.L, max = L.od[1], card = CARDS[G.cardId];
   $('#gOd .set').style.left = (G.rec.od / max * 100) + '%'; $('#gOd .lim').style.left = L.k ? '100%' : (card.limit / max * 100) + '%';
-  if (blank || !G.lastC) { setGauge('gRes', '—'); $('#gRes .pin').style.left = '0%'; setGauge('gOd', G.rec.od + ' μm（設定）'); $('#gOd .band').style.width = '0%'; if (L.loadLimit) { setGauge('gLoad', '—'); $('#gLoad .pin').style.left = '0%'; } if (L.clean) setGauge('gDirt', '0 次'); if (L.thermal) { setGauge('gWarm', Math.round(G.run.warm * 100) + '%'); $('#gWarm .band').style.width = (G.run.warm * 100) + '%'; } drawPads(null); }
+  if (blank || !G.lastC) { setGauge('gRes', '—'); $('#gRes .pin').style.left = '0%'; setGauge('gOd', G.rec.od + ' μm（設定）'); $('#gOd .band').style.width = '0%'; if (L.loadLimit) { setGauge('gLoad', '—'); $('#gLoad .pin').style.left = '0%'; } if (L.clean) setGauge('gDirt', '0 次'); if (L.power) { setGauge('gAmp', '—'); $('#gAmp .pin').style.left = '0%'; } if (L.thermal) { setGauge('gWarm', Math.round(G.run.warm * 100) + '%'); $('#gWarm .band').style.width = (G.run.warm * 100) + '%'; } drawPads(null); }
   else setGauge('gOd', G.rec.od + ' μm（設定）');
 }
 function updateGauges(c) {
@@ -134,6 +143,7 @@ function updateGauges(c) {
   if (L.loadLimit) { $('#gLoad .pin').style.left = clamp(c.load / (L.loadLimit / 0.75), 0, 1) * 100 + '%'; setGauge('gLoad', Math.round(c.load) + ' kgf', c.overload ? 'bad' : c.load > L.loadLimit * 0.9 ? 'warn' : ''); }
   if (L.clean) { const lim = G.rec.clean; $('#gDirt .band').style.width = clamp(run.sinceClean / lim, 0, 1) * 100 + '%'; setGauge('gDirt', run.sinceClean + ' 次', c.dirt > 400 ? 'bad' : c.dirt > 250 ? 'warn' : ''); }
   if (L.thermal) { $('#gWarm .band').style.width = (run.warm * 100) + '%'; setGauge('gWarm', Math.round(run.warm * 100) + '%', run.warm < 0.4 ? 'warn' : ''); }
+  if (L.power) { $('#gAmp .pin').style.left = clamp(c.iPeak / (L.power.mac / 0.7), 0, 1) * 100 + '%'; setGauge('gAmp', `${c.iPeak.toFixed(2)} A${run.burnt ? ' · 燒 ' + run.burnt + ' 支' : ''}`, c.over > 1 || run.burnt ? 'bad' : c.over > 0.85 ? 'warn' : ''); }
   drawPads(c);
 }
 function drawPads(c) {
@@ -141,6 +151,17 @@ function drawPads(c) {
   { const pw = Math.round(r.width * d), ph = Math.round(r.height * d); if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; } }
   const g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, r.width, r.height);
   const L = G.L, card = CARDS[G.cardId], ps = Math.min(56, r.height - 6), k = ps / L.pad, gap = (r.width - 2 * ps) / 3;
+  if (L.bump) {
+    [c ? c.markFirst : 0, c ? c.markLast : 0].forEach((mark, i) => {
+      const cx = gap + i * (ps + gap) + ps / 2, cy = r.height / 2, bad = mark / L.bump.d > L.bump.lim[0];
+      const gr = g.createRadialGradient(cx - ps * 0.15, cy - ps * 0.15, 2, cx, cy, ps / 2); gr.addColorStop(0, '#e6ebf1'); gr.addColorStop(1, '#8f9aa8');
+      g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, ps / 2, 0, Math.PI * 2); g.fill();
+      g.setLineDash([3, 3]); g.strokeStyle = 'rgba(10,14,20,.55)'; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, ps / 4, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);      // the 50 % line
+      if (mark > 0) { g.fillStyle = bad ? COLORS.fail : '#3d4552'; g.beginPath(); g.arc(cx, cy, mark * k / 2, 0, Math.PI * 2); g.fill(); }
+      else if (c) { g.strokeStyle = COLORS.fail; g.lineWidth = 2; g.beginPath(); g.moveTo(cx - 8, cy - 8); g.lineTo(cx + 8, cy + 8); g.moveTo(cx + 8, cy - 8); g.lineTo(cx - 8, cy + 8); g.stroke(); }
+    });
+    return;
+  }
   [[c ? c.markFirst : 0, c && c.breach], [c ? c.markLast : 0, false]].forEach(([mark, bad], i) => {
     const x = gap + i * (ps + gap), y = (r.height - ps) / 2;
     g.fillStyle = '#9aa5b3'; g.fillRect(x, y, ps, ps);
@@ -192,6 +213,7 @@ function doTest() {
     onContact: () => {
       updateGauges(c); updateTime(); if (L.k) stage.setLift(c.pot - c.aot);
       if (ev.includes('alarm')) audio.play('alarm'); else { contactSound(c, run.sites[0], 1.0); if (c.breach) audio.play('breach'); else if (c.crackP > 0.1) audio.play('crack'); }
+      if (L.power) { $('#gAmp .pin').style.left = clamp(c.iPeak / (L.power.mac / 0.7), 0, 1) * 100 + '%'; }
       const a = advise(L, CARDS[G.cardId], c); $('#advice').textContent = a.zh; $('#advice').className = 'advice ' + (a.bad ? 'bad' : a.ok ? 'ok' : '');
     },
   });
@@ -239,11 +261,14 @@ function onContact(out) {
   const c = out.c, L = G.L, now = performance.now(), dur = tdDur();
   updateGauges(c); updateTime(); if (L.k) stage.setLift(c.pot - c.aot);
   if (out.ev.includes('bend')) { audio.play('bend'); toast('✖ 探針被壓彎了，停機'); return; }
+  if (out.ev.includes('burn')) { lastLoud = now; audio.play('burn'); once('burn', '⚠ 電源探針燒掉了', 'warn'); }
+  if (out.ev.includes('dead')) { toast('✖ 燒掉太多探針，停機換針'); return; }
   if (out.ev.includes('alarm')) { audio.play('alarm'); toast(out.ev.includes('stop') ? '✖ 載台連續過載，機台停機' : '⚠ 載台過載，這次下針被拒絕', out.ev.includes('stop') ? '' : 'warn'); return; }
   if (now - lastTick > 72) { lastTick = now; contactSound(c, out.site, dur); }
   if (now - lastLoud > 380) {
     if (out.ev.includes('breach')) { lastLoud = now; audio.play('breach'); once('breach', '⚠ 針痕刮出鋁墊', 'warn'); }
     else if (out.ev.includes('crack')) { lastLoud = now; audio.play('crack'); once('crack', '⚠ 鋁墊被壓傷', 'warn'); }
+    else if (out.ev.includes('squash')) { lastLoud = now; audio.play('crack'); once('squash', '⚠ 凸塊被壓出太大的針痕', 'warn'); }
   }
   if (out.ev.includes('open')) once('open', '⚠ 有探針沒碰到晶粒', 'warn');
 }
@@ -263,7 +288,7 @@ function onResult(out) {
 /* ---------------- results ---------------- */
 async function finish() {
   const run = G.run, L = G.L, sc = score(run), tok = ++G.token;
-  const broke = run.sum.bent || run.sum.stopped;
+  const broke = run.sum.bent || run.sum.stopped || run.sum.dead;
   G.running = false; audio.setMood('result');
   if (broke) { await wait(1900); if (tok !== G.token) return; }      // stay on the card long enough to see what happened
   stage.home(); stage.setShot('wide'); stage.setSway(1.4);
@@ -274,10 +299,11 @@ async function finish() {
   const T = TEXT[L.id], s = run.sum, best = progress.best[L.id];
   if (!best || sc.score > best.score) { progress.best[L.id] = { score: sc.score, stars: sc.stars }; try { localStorage.setItem('pcl-progress', JSON.stringify(progress)); } catch {} }
   $('#rNo').textContent = `LEVEL ${L.n} · ${L.zh}`; $('#rScore').textContent = '0'; $('#rStars').innerHTML = stars(0); $('#rRank').textContent = '';
-  const rows = [['好晶粒正確測出', `${s.shipped} / ${broke ? '約 ' + Math.round(DIES * L.wafers * 0.955) : s.good}`, broke ? 'bad' : ''], ['好晶粒被誤判', s.falseFail, s.falseFail ? 'bad' : ''], ['鋁墊受損', s.damaged, s.damaged ? 'bad' : '']];
+  const rows = [['好晶粒正確測出', `${s.shipped} / ${broke ? '約 ' + Math.round(DIES * L.wafers * 0.955) : s.good}`, broke ? 'bad' : ''], ['好晶粒被誤判', s.falseFail, s.falseFail ? 'bad' : ''], [L.bump ? '凸塊受損' : '鋁墊受損', s.damaged, s.damaged ? 'bad' : '']];
+  if (L.power) rows.push(['燒毀的探針', run.burnt + ' 支', run.burnt ? 'bad' : '']);
   if (L.clean) rows.push(['清針次數', run.cleans + ' 次', sc.cleanPen > 3 ? 'warn' : '']);
   rows.push(['花費時間', `${Math.round(sc.t)} / ${L.budget} 秒`, sc.over > 0 ? 'bad' : '']);
-  if (s.bent || s.stopped) rows.push(['探針卡／機台', s.bent ? '探針壓彎' : '過載停機', 'bad']);
+  if (s.bent || s.stopped || s.dead) rows.push(['探針卡／機台', s.bent ? '探針壓彎' : s.dead ? '停機換針' : '過載停機', 'bad']);
   $('#rRows').innerHTML = rows.map(([a, b, c]) => `<div class="rowx"><span>${a}</span><b class="${c || ''}">${b}</b></div>`).join('');
   $('#rWhy').innerHTML = diagnose(run, sc, G.rec).map((x) => `<li class="${x.ok ? 'good' : x.bad ? '' : 'fine'}">${x.zh}</li>`).join('');
   $('#rLesson').innerHTML = `<b>這關的重點</b>　${T.lesson} <span class="c">${T.refs.map((n) => `<a href="#" data-ref="${n}">[${n}]</a>`).join('')}</span>`;

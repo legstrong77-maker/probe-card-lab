@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>找出它的極限 · Probe Card Lab</title>
-<meta name="description" content="你是針測工程師：六個真實會遇到的狀況，調出不誤判、不傷鋁墊、不壓壞探針的設定。">
+<meta name="description" content="你是針測工程師：八個真實會遇到的狀況，調出不誤判、不傷鋁墊、不壓壞探針的設定。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@ a{color:#8fd8f5;text-decoration:none}
 .sub{font-size:clamp(15px,1.7vw,19px);color:#c4cedb;max-width:640px;line-height:1.6;margin:0 0 24px}
 .cta-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
 .cta-row .btn.pri{font-size:17px;padding:14px 26px;border-radius:12px}
-.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .lv{position:relative;text-align:left;padding:14px 16px 13px;border-radius:var(--r);border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:transform .15s,border-color .15s,background .15s;display:block;width:100%}
 .lv:hover{transform:translateY(-3px);border-color:rgba(140,190,230,.55);background:var(--glass2)}
 .lv .n{font:700 11px var(--mono);letter-spacing:2px;color:var(--accent)}
@@ -178,6 +178,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .loading{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);font:600 11px var(--mono);letter-spacing:2px;color:var(--dim);pointer-events:none;transition:opacity .5s}
 
 @media (max-width:1180px){
+  .levels{grid-template-columns:repeat(3,1fr)}
   .bottom{max-width:calc(100% - 32px);min-width:0;left:16px;right:16px;transform:none;bottom:12px;flex-wrap:wrap}
   .left{width:210px}
   .right{width:300px}
@@ -229,7 +230,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   <div class="t-wrap">
     <div class="eyebrow">Probe Card Lab · 極限挑戰</div>
     <h1>找出它的<em>極限</em></h1>
-    <p class="sub">你是針測工程師。六個真的會遇到的狀況：調出一組設定，不誤判、不傷鋁墊、不壓壞探針，還要準時交貨。</p>
+    <p class="sub">你是針測工程師。八個真的會遇到的狀況：調出一組設定，不誤判、不傷鋁墊、不壓壞探針，還要準時交貨。</p>
     <div class="cta-row">
       <button class="btn pri" id="startBtn">▶ 開始 START</button>
       <button class="btn ghost" id="soundBtn">🔊 聲音開</button>
@@ -278,8 +279,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <div class="g" id="gOd"><label>過驅量<small>設定 → 實際</small></label><div class="bar"><i class="z lim" style="right:0;background:rgba(255,93,106,.32)"></i><b class="band"></b><b class="set"></b></div><output>—</output></div>
     <div class="g" id="gLoad"><label>總針壓<small>載台負載</small></label><div class="bar"><i class="z" style="left:75%;right:0;background:rgba(255,93,106,.32)"></i><b class="pin"></b></div><output>—</output></div>
     <div class="g" id="gDirt"><label>針尖沾黏<small>距離上次清針</small></label><div class="bar"><b class="band" style="background:var(--amber)"></b></div><output>—</output></div>
+    <div class="g" id="gAmp"><label>每針電流<small>最吃重的探針</small></label><div class="bar"><i class="z" style="left:70%;right:0;background:rgba(255,93,106,.32)"></i><b class="pin"></b></div><output>—</output></div>
     <div class="g" id="gWarm"><label>探針卡溫度<small>預熱程度</small></label><div class="bar"><b class="band" style="background:#ff8a3d"></b></div><output>—</output></div>
-    <div class="g pads"><label>針痕<small>先碰到 ／ 最後碰到</small></label><canvas id="pads"></canvas></div>
+    <div class="g pads"><label id="padsLbl">針痕<small>先碰到 ／ 最後碰到</small></label><canvas id="pads"></canvas></div>
   </div>
 </section>
 

@@ -300,7 +300,8 @@ export function createStage(canvas, { lowPower = false } = {}) {
     tipPos = new Float32Array(probes.length * 3); tipCol = new Float32Array(probes.length * 3);
     tipGeo.setAttribute('position', new THREE.BufferAttribute(tipPos, 3)); tipGeo.setAttribute('color', new THREE.BufferAttribute(tipCol, 3));
     tipPts.material.size = dense ? 0.07 : 0.12;
-    card = { kind, probes, warpN, mesh, dense, per: kind === 'cant' ? 1 : 4 };
+    card = { kind, probes, warpN, mesh, dense, per: kind === 'cant' ? 1 : 4, burnt: new Set() };
+    const white = new THREE.Color(1, 1, 1); for (let i = 0; i < probes.length; i++) mesh.setColorAt(i, white);      // instance colours, so single probes can char
     U.uSet.value = 0; st.bent = 0; st.lift = 0;
   }
 
@@ -315,9 +316,15 @@ export function createStage(canvas, { lowPower = false } = {}) {
     const span = card.per === 1 ? 0.84 : 1.64, k = S / span, padW = card.dense ? 0.03 : 0.036, um = padW / L.pad;   // world units per μm on the pad
     for (let i = 0; i < card.probes.length; i++) {
       const [x, z] = card.probes[i], px = (x + span / 2) * k, pz = (z + span / 2) * k, pw = padW * k;
+      const od = c ? c.aot - (L.plan + padInfo.flat + (L.bumpVar || 0)) * card.warpN[i] : 0;
+      if (L.bump) {                                           // round copper pillars with a solder cap; the mark is a flat spot
+        g.fillStyle = '#b9743f'; g.beginPath(); g.arc(px, pz, pw * 0.62, 0, 7); g.fill();
+        g.fillStyle = '#d5dbe2'; g.beginPath(); g.arc(px, pz, pw * 0.5, 0, 7); g.fill();
+        if (withMarks && c && od > 0) { const d = L.bump.k * padInfo.force(od) / L.bump.d; g.fillStyle = d > L.bump.lim[0] ? '#ff4d5a' : '#3a4150'; g.beginPath(); g.arc(px, pz, pw * 0.5 * d, 0, 7); g.fill(); }
+        continue;
+      }
       g.fillStyle = card.dense ? '#c4a466' : '#c9d2de'; g.fillRect(px - pw / 2, pz - pw / 2, pw, pw);
       if (!withMarks || !c) continue;
-      const od = c.aot - (L.plan + padInfo.flat) * card.warpN[i];
       if (od <= 0) continue;
       const len = (padInfo.slide(od) + padInfo.contact) * um * k, st0 = c.start * um * k, hh = Math.max(1.5, padInfo.contact * um * k * 0.5);
       const over = st0 + len > pw, side = card.kind === 'cant' ? card.probes[i][2] : 3;     // each cantilever tip scrubs toward the die centre
@@ -379,7 +386,7 @@ export function createStage(canvas, { lowPower = false } = {}) {
   function startTD(out, dur, L, info, cb = {}) {
     padInfo = info; st.homing = false;
     st.td = { out, dur, t: 0, L, cb, fromX: st.wx, fromZ: st.wz, toX: -out.site.cx, toZ: -out.site.cz, hit: false, done: false, painted: false };
-    st.warpUm = L.plan + info.flat;
+    st.warpUm = L.plan + info.flat + (L.bumpVar || 0);
     padMesh.scale.setScalar(card.per === 1 ? 0.84 : 1.64);
     padMesh.position.set(out.site.cx, 0.003, out.site.cz);
     drawPads(L, out.c, false);
@@ -389,6 +396,16 @@ export function createStage(canvas, { lowPower = false } = {}) {
   function setHot(v) { st.hotT = v; }
   function bend() { st.bent = 1; st.shake = 1; st.flash = [1, 0.15, 0.1, 0.55]; st.ab = 0.03; for (let i = 0; i < 6; i++) burst((Math.random() - 0.5) * 1.2, 0.2 + Math.random() * 0.4, -0.2 - Math.random() * 0.4, 28, [1, 0.35, 0.1], 2.4, 1.0); }
   function alarm() { st.shake = Math.max(st.shake, 0.5); st.flash = [1, 0.2, 0.15, 0.4]; }
+  const _burnt = new THREE.Color(0x1c120b);
+  function burnFx(n) {                                                           // power probes cooking: sparks, and the probes stay charred
+    const pool = []; for (let i = 0; i < card.probes.length; i++) if (!card.burnt.has(i) && card.probes[i][1] <= 0) pool.push(i);
+    for (let k = 0; k < n && pool.length; k++) {
+      const i = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; card.burnt.add(i);
+      card.mesh.setColorAt(i, _burnt); burst(card.probes[i][0], 0.35, card.probes[i][1], 26, [1.6, 0.7, 0.15], 2.0, 0.7, 4);
+    }
+    card.mesh.instanceColor.needsUpdate = true;
+    st.shake = Math.max(st.shake, 0.35); st.flash = [1, 0.55, 0.15, 0.32]; st.ab = Math.max(st.ab, 0.012);
+  }
 
   function update(dt) {
     st.t += dt;
@@ -409,7 +426,8 @@ export function createStage(canvas, { lowPower = false } = {}) {
         else {
           burst(0, 0.04, card.kind === 'cant' ? 0 : -0.3, n, [0.35, 0.9, 1.0], 0.9, 0.35, 2);
           if (ev.includes('breach')) { burst(0.2, 0.04, -0.1, 26, [1, 0.3, 0.2], 1.8, 0.6); st.shake = Math.max(st.shake, 0.25); }
-          if (ev.includes('crack')) { burst(-0.2, 0.04, -0.2, 22, [0.95, 0.35, 1.0], 1.6, 0.6); st.shake = Math.max(st.shake, 0.22); }
+          if (ev.includes('crack') || ev.includes('squash')) { burst(-0.2, 0.04, -0.2, 22, [0.95, 0.35, 1.0], 1.6, 0.6); st.shake = Math.max(st.shake, 0.22); }
+          if (ev.includes('burn')) burnFx(td.out.burn || 1);
         }
         td.cb.onContact && td.cb.onContact(td.out);
       }

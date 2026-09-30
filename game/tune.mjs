@@ -36,3 +36,22 @@ for (const L of LEVELS) {
     for (const c of [20, 30, 45, 60, 90, 200]) { const q = play(L, 'cobra', { od: 76, clean: c }, { soak: 70 }); console.log(`  soak 70 OD 76 clean ${String(c).padStart(3)}: ${cell(q)} ${detail(q)}`); }
   }
 }
+
+// levels 7 and 8 have their own levers (card, cleaning, current clamp, short screening)
+{
+  const L7 = LEVELS[6], L8 = LEVELS[7];
+  const run2 = (L, card, rec) => play(L, card, rec);
+
+console.log('=== L7 bump');
+for (const card of L7.cards) for (const cl of [200, 60, 40, 25]) {
+  console.log(card.padEnd(7), 'clean', String(cl).padStart(3), [20, 30, 40, 45, 50, 55, 60, 70, 80, 90, 100, 110].map((od) => `${od}:${cell(run2(L7, card, { od, clean: cl }))}`).join(' '));
+}
+const d2 = (r) => { const x = r.run.sum; return `ship ${x.shipped}/${x.good} ff ${x.falseFail} dmg ${x.damaged} cleans ${r.run.cleans} t ${Math.round(r.sc.t)} burnt ${r.run.burnt} inrush ${r.run.log.inrush} peak ${r.run.log.maxPeak.toFixed(2)}`; };
+console.log('  detail mems 45/40:', d2(run2(L7, 'mems', { od: 45, clean: 40 })), '| LF 70/40:', d2(run2(L7, 'memsLF', { od: 70, clean: 40 })));
+console.log('=== L8 amp');
+for (const screen of [false, true]) for (const clamp of [180, 120, 100, 80]) {
+  console.log('screen', screen ? 'Y' : 'N', 'clamp', String(clamp).padStart(3), [200, 100, 60, 40, 30, 20].map((cl) => `c${cl}:${cell(run2(L8, 'mems', { od: 60, clean: cl, clamp, screen }))}`).join(' '));
+}
+for (const [cl, clamp, screen] of [[200, 180, false], [200, 120, true], [40, 120, true], [60, 100, true], [30, 120, true]]) console.log(`  clean ${cl} clamp ${clamp} screen ${screen}:`, d2(run2(L8, 'mems', { od: 60, clean: cl, clamp, screen })));
+console.log('  OD sweep (clean 40, clamp 120, screen):', [20, 30, 40, 50, 60, 70, 80, 90].map((od) => `${od}:${cell(run2(L8, 'mems', { od, clean: 40, clamp: 120, screen: true }))}`).join(' '));
+}

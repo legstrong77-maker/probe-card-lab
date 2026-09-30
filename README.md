@@ -30,6 +30,8 @@
 | 4 載板翹了 | 平整度會吃掉過驅量的可用範圍 |
 | 5 十萬針 | 整張卡受力變形，設定的過驅量只有一部分壓到針上 |
 | 6 高溫測試 | 探針卡升溫後針尖高度會變，量產前要預熱 |
+| 7 微凸塊 | 在凸塊上要管的是針壓：針痕不能超過凸塊直徑的一半 |
+| 8 大電流 | 電源探針不會平均分擔電流：保持針尖乾淨，先篩短路再送全功率 |
 
 配樂和音效全部用 Web Audio 即時合成，沒有音檔；關卡說明和重點的語音是 Gemini TTS。物理模型在 `game/model.js`，是不依賴瀏覽器的純函式，`node game/tune.mjs` 會掃過每一關所有設定的得分，用來調整難度。
 
@@ -85,7 +87,7 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 | 主板層數 | 標示「數十層」 | 公開的探針卡 PCB 例子為 42–76 層、厚 2.7–9.6 mm | [33] |
 | 探針卡結構與 DIS | 彈簧針塔 → 補強板 → 主板 → MLO 載板 → 探針頭 → 晶圓 | 主板、（中介層）、空間轉換板、探針頭的組成與專利描述一致；補強板是機構件，不在訊號路徑上。DIS Tech 在 2024 年 5 月由 Technoprobe 自 Teradyne 收購 | [31] [32] [34] [35] [36] |
 
-模擬器沒有做的部分：溫度、上片與對位、針痕檢查、探針磨耗與壽命（公開資料為 100 萬次以上）、電流承載能力，以及整張卡受力後的變形（高針數卡上，實際過驅量只有設定值的一部分）。溫度和整張卡的變形，在遊戲的第 5、6 關有簡化的版本。
+模擬器沒有做的部分：溫度、上片與對位、針痕檢查、探針磨耗與壽命（公開資料為 100 萬次以上）、電流承載能力，以及整張卡受力後的變形（高針數卡上，實際過驅量只有設定值的一部分）。溫度、整張卡的變形和電流承載能力，在遊戲的第 5、6、8 關有簡化的版本。
 
 ### 遊戲加上的機制
 
@@ -98,6 +100,8 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 | 清針的代價 | 每次清針 12–15 秒，並扣 0.6 分代表針尖磨耗；每次下針讓接觸電阻升高 7–9 mΩ（比實際快，方便在幾片晶圓內看到效果） | 常見每 50–100 次清一次；公開例子：每 100 顆晶粒清一次，每次下針 25 下、過驅量 20 μm | [29] [30] [40] |
 | 整張卡受力變形（第 5 關） | 10 萬針；總針壓每增加 1 kgf，卡與機台退讓 1 μm；載台上限 300 kgf | 4 萬針的卡，實際過驅量最好也只有設定值的一半左右；10 萬針的卡總針壓 170–280 kgf，接近載台約 300 kgf 的上限 | [38] [25] [26] [24] |
 | 高溫漂移（第 6 關） | 125 °C；冷卡的針尖比熱卡遠 60 μm。升溫時間常數 60 秒，載台移開後以 120 秒冷卻（時間大幅壓縮） | 室溫到 90 °C，大面積探針卡的針尖高度可變化 50 μm；175 °C 下最好的卡約 15 μm。實際預熱：機台 2 小時、探針卡 10–15 分鐘。清針、換片把載台移開幾分鐘，針尖高度會再跑掉 | [39] [40] [41] |
+| 微凸塊（第 7 關） | 30 μm 的銅柱凸塊；針痕直徑 = 8 μm × 針壓（g）。針痕超過凸塊直徑的 52% 開始算受損，66% 以上一定受損。凸塊高低差 6 μm；每次下針讓接觸電阻升高 8 mΩ（示意） | 30 μm 的銅柱上，針壓每差 0.5 g，針痕差 4 μm。規格常訂針痕直徑小於凸塊直徑的 50%（常見 50–70%），或針痕面積小於 25%。凸塊高度的容許差約 10%。微凸塊要求針壓低於 1.5 gf；在凸塊上每 50–250 次下針清一次 | [42] [15] [45] [51] [43] [44] |
+| 大電流（第 8 關） | 每顆晶粒 120 A，由 300 支電源探針分擔，平均每支 0.4 A；反覆使用的上限 0.65 A。針尖越髒，最吃重的那支針扛得越多（最多約 2.5 倍）。3.5% 的晶粒短路；沒有先篩就送全電壓，一次燒掉 2–4 支針，燒掉 24 支就得停機（示意） | 載流能力（CCC）定義為讓針壓永久下降 20% 的電流；反覆使用的上限（MAC）約為 CCC 的 0.6–0.8 倍，公開例子為 0.28–0.74 A。設計目標是每針 0.5 A。公開例子：12 支電源針裡有 2 支扛了 80% 的電流；短路晶粒的瞬間電流可超過 10 A。做法是先用低電壓和低的電流上限篩短路，再對好的晶粒送全功率 | [46] [47] [48] [49] [52] [24] |
 | 重工整平（第 4 關） | 載板翹曲 50 → 15 μm，花 60 秒（示意） | 遊戲設計。實際上是把卡送回供應商重新整平，需要數天 |  |
 | 計分 | 正確測出且沒受傷的好晶粒比例，再扣清針、超時和損壞的分數 | 遊戲設計，不是業界指標 |  |
 
@@ -144,6 +148,17 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 39. [US8531202B2 — Probe card test apparatus and method](https://patents.google.com/patent/US8531202B2/en)
 40. [Van Cauwenberghe (ON Semiconductor) — Wafer Probe Challenges for the Automotive Market, SWTW 2012](https://www.swtest.org/swtw_library/2012proc/PDF/S01_03_Cauwenberghe_SWTW2012.pdf)
 41. [Sinsheimer & Buckholtz (Teradyne) — Wafer Sort at Extreme Temperatures, SWTW 2018](https://www.swtest.org/swtw_library/2018proc/PDF/P01_02_Buckholtz_SWTW2018.pdf)
+42. [Wittig, Leong et al. (GLOBALFOUNDRIES / FormFactor) — Key Considerations to Probe Cu Pillars in High Volume Production, 2014](https://www.formfactor.com/wp-content/uploads/S05_01_Leong_06-01-2014_Final.pdf)
+43. [Liao (FormFactor) — Probe Card Solution to Address Leading-Edge Advanced Package Test Requirements, 2021](https://compass.formfactor.com/wp-content/uploads/2021-Probe-Card-Solution-to-Address-Leading-Edge-Advanced-Package-Test-Requirements-Alan-Liao.pdf)
+44. [Mai & Mai (JEM) — Probing Challenges with Cu Pillar, SWTW 2017](https://www.swtest.org/swtw_library/2017proc/PDF/S07_03_Mai_SWTW2017R2.pdf)
+45. [Angles & Vallauri (STMicroelectronics / Technoprobe) — Addressing 80 µm pitch Cu Pillar Bump Wafer Probing, SWTW 2014](https://www.swtest.org/swtw_library/2014proc/PDF/SWTW2014_19.pdf)
+46. [Daniels (Texas Instruments) — ISMI Probe Council Current Carrying Capability Measurement Standard, SWTW 2009](https://www.swtest.org/swtw_library/2009proc/PDF/S08_03_Daniels_SWTW2009.pdf)
+47. [Cassier, Folwarski, Kister & Leong (Qualcomm / FormFactor) — Determining Probe's Maximum Allowable Current, SWTW 2015](https://www.swtest.org/swtw_library/2015proc/PDF/S01_01_Kister_SWTW2015R.pdf)
+48. [Huebner (FormFactor) — A Hot Topic: Current Carrying Capacity, Tip Melting and Arcing, SWTW 2011](https://www.swtest.org/swtw_library/2011proc/PDF/S03_01_Huebner_SWTW2011.pdf)
+49. [Gaggl, Newman & Kaczinsky — Aspects of High Power Probing, SWTW 2011](https://www.swtest.org/swtw_library/2011proc/PDF/S03_03_Gaggl_SWTW2011.pdf)
+50. [Dabrowiecki (Feinmetall) — A finite element analysis of copper pillar bump probing, 2016](https://www.electronicdesign.com/home/article/21206303/a-finite-element-analysis-of-copper-pillar-bump-probing)
+51. [SemiEngineering — Challenges Grow For Creating Smaller Bumps For Flip Chips, 2023](https://semiengineering.com/challenges-grow-for-creating-smaller-bumps-for-flip-chips/)
+52. [Claudius (Intel) — SIU Probe Burn Control, SWTW 2005](https://www.swtest.org/swtw_library/2005proc/PDF/T01_04_Claudius.pdf)
 <!-- refs:end -->
 
 ## 檔案

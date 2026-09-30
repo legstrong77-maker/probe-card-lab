@@ -42,6 +42,8 @@ export const CARDS = {
   cobraHP: { id: 'cobraHP', zh: 'Cobra 垂直針卡', en: 'Cobra vertical', note: '每針約 5 g', force: (od) => 4.7 * tanh(od / 45) + 0.008 * od, slide: (od) => 0.05 * od, contact: 10, limit: 170, crack: [120, 165], cresK: 1.6, per: 4, color: '#b69cff' },
   // MEMS vertical: low force, short travel, sharp tip
   mems: { id: 'mems', zh: 'MEMS 垂直針卡', en: 'MEMS vertical', note: '低針壓 · 每針約 2 g · 行程短', force: (od) => 2.2 * tanh(od / 30) + 0.004 * od, slide: (od) => 0.04 * od, contact: 9, limit: 100, crack: [88, 100], cresK: 0.75, per: 4, color: '#5fe3c0' },
+  // low-force MEMS for micro-bumps: under 1.5 gf per probe
+  memsLF: { id: 'memsLF', zh: '低針壓 MEMS 針卡', en: 'Low-force MEMS', note: '每針約 1.5 g · 為微凸塊設計', force: (od) => 1.4 * tanh(od / 30) + 0.004 * od, slide: (od) => 0.03 * od, contact: 8, limit: 100, crack: null, cresK: 0.5, per: 4, color: '#7fe0ff' },
 };
 /** Contact resistance in mΩ for one probe at overdrive `od`, with `dirt` mΩ of debris on the tip. */
 export function cres(card, od, dirt = 0) {
@@ -81,6 +83,20 @@ export const LEVELS = [
     contam: 7, test: 1.5, wafers: 3, budget: 420, od: [0, 200, 110], clean: [10, 200, 200], cleanT: 15, cleanCost: 0.6,
     soak: [0, 180, 0], thermal: { drift: 60, tau: 60, cool: 120, crack: [80, 120] }, stars: [60, 84, 95],
   },
+  {
+    // micro Cu pillars: the mark must stay small compared with the bump, so force is the limit, not scrub length
+    // bump.d: bump diameter μm · bump.k: mark diameter in μm per gf · bump.lim: mark/bump diameter ratio where damage starts and is certain
+    id: 'bump', n: 7, zh: '微凸塊', en: 'Micro-bumps', cards: ['mems', 'memsLF'], pad: 30, plan: 14, flat: 0, bumpVar: 6, pins: 224, k: 0, loadLimit: 0,
+    contam: 8, test: 1.5, wafers: 2, budget: 330, od: [0, 150, 75], clean: [10, 200, 200], cleanT: 12, cleanCost: 0.6, soak: null, thermal: null,
+    bump: { d: 30, k: 8, lim: [0.52, 0.66] }, stars: [60, 84, 95],
+  },
+  {
+    // an AI die at full power: the supply probes share the current, and they never share it evenly
+    // power.need: A per die for the full-speed test · probes: supply probes per touchdown · mac: maximum allowable current per probe (A)
+    id: 'amp', n: 8, zh: '大電流', en: 'High current', cards: ['mems'], pad: 60, plan: 10, flat: 0, pins: 224, k: 0, loadLimit: 0,
+    contam: 6, test: 1.5, wafers: 3, budget: 440, od: [0, 150, 60], clean: [10, 200, 200], cleanT: 12, cleanCost: 0.6, soak: null, thermal: null,
+    power: { need: 120, probes: 300, mac: 0.65, clamp: [60, 180, 180], shortRate: 0.035, screenT: 0.3, maxBurnt: 24 }, stars: [60, 84, 95],
+  },
 ];
 export const MOVE_T = 0.7;                       // seconds of motion per touchdown (typical prober index time)
 
@@ -91,12 +107,12 @@ export function createRun(L, cardId, seed = 1) {
   const total = sites.length * L.wafers;
   return {
     L, card, sites, seed, truth, total,
-    td: 0, t: 0, wafer: 0, sinceClean: 0, cleans: 0, warm: L.thermal ? 0 : 1, flat: L.flat, reworked: false,
+    td: 0, t: 0, wafer: 0, sinceClean: 0, cleans: 0, warm: L.thermal ? 0 : 1, flat: L.flat, reworked: false, burnt: 0,
     res: new Uint8Array(N * N),                     // per die on the current wafer: 0 untested, 1 pass, 2 true fail, 3 false fail
     dmg: new Uint8Array(N * N),                     // 1 = pad damaged (scrub off pad or cracked)
-    sum: { good: 0, shipped: 0, falseFail: 0, damaged: 0, trueFail: 0, opens: 0, breach: 0, crack: 0, alarms: 0, bent: false, stopped: false },
+    sum: { good: 0, shipped: 0, falseFail: 0, damaged: 0, trueFail: 0, opens: 0, breach: 0, crack: 0, alarms: 0, burns: 0, bent: false, stopped: false, dead: false },
     hist: [],                                       // finished wafers: {res, dmg}
-    log: { minOdLast: 1e9, maxOdFirst: 0, maxR: 0, maxLoad: 0, coldTd: 0 },
+    log: { minOdLast: 1e9, maxOdFirst: 0, maxR: 0, maxLoad: 0, coldTd: 0, maxPeak: 0, maxDD: 0, inrush: 0 },
     done: false,
   };
 }
@@ -116,7 +132,7 @@ export function solveAot(L, card, pot, planTot) {
 export function contact(run, rec, jitter = 0) {
   const { L, card } = run;
   const drift = L.thermal ? L.thermal.drift * (1 - run.warm) : 0;       // a cold card sits further from the wafer
-  const planTot = L.plan + run.flat;
+  const planTot = L.plan + run.flat + (L.bumpVar || 0);
   const aot = Math.max(0, solveAot(L, card, Math.max(0, rec.od - drift), planTot));
   const odFirst = aot, odLast = aot - planTot;
   let fs = 0; for (let u = 0; u <= 4; u++) { const od = aot - planTot * u / 4; fs += od > 0 ? card.force(od) : 0; }
@@ -126,7 +142,7 @@ export function contact(run, rec, jitter = 0) {
   const markFirst = odFirst > 0 ? card.slide(odFirst) + card.contact : 0;
   const markLast = odLast > 0 ? card.slide(odLast) + card.contact : 0;
   const crackBand = (L.thermal && L.thermal.crack) || card.crack;
-  return {
+  const c = {
     pot: rec.od, drift, aot, odFirst, odLast, load, dirt, start, markFirst, markLast,
     fFirst: odFirst > 0 ? card.force(odFirst) : 0, fLast: odLast > 0 ? card.force(odLast) : 0,
     rFirst: cres(card, odFirst, dirt), rLast: cres(card, odLast, dirt),
@@ -135,7 +151,21 @@ export function contact(run, rec, jitter = 0) {
     bend: odFirst >= card.limit,
     overload: L.loadLimit > 0 && load > L.loadLimit,
   };
+  if (L.bump) {                                     // on a bump the mark is a flat spot whose size follows the force
+    const mk = (od) => (od > 0 ? L.bump.k * card.force(od) : 0);
+    c.markFirst = mk(odFirst); c.markLast = mk(odLast); c.dD = c.markFirst / L.bump.d;
+    c.breach = false; c.crackP = 0.8 * sstep(L.bump.lim[0], L.bump.lim[1], c.dD);
+  }
+  if (L.power) {                                    // the supply probes share the die current; dirty or barely touching probes share it badly
+    const P = L.power, alive = Math.max(1, P.probes - run.burnt), amps = Math.min(rec.clamp || P.need, P.need);
+    c.iAvg = amps / alive;
+    c.spread = 1 + 1.5 * dirt / (dirt + 250) + (odLast <= 0 ? 0.6 : odLast < 20 ? 0.3 * (1 - odLast / 20) : 0);
+    c.iPeak = c.iAvg * c.spread; c.over = c.iPeak / P.mac;
+  }
+  return c;
 }
+/** Seconds of tester time per touchdown: a current clamp below what the test needs stretches it. */
+export function testTime(L, rec) { return L.power ? L.test * Math.max(1, L.power.need / (rec.clamp || L.power.need)) + (rec.screen ? L.power.screenT : 0) : L.test; }
 function heat(run, dt, away) {
   const th = run.L.thermal; if (!th) return;
   run.warm = away ? run.warm * Math.exp(-dt / th.cool) : 1 - (1 - run.warm) * Math.exp(-dt / th.tau);
@@ -168,8 +198,19 @@ export function step(run, rec) {
     return out;
   }
   if (c.bend) { sum.bent = true; run.done = true; ev.push('bend'); run.t += MOVE_T; return out; }
+  let shorted = -1;
+  if (L.power) {
+    const P = L.power; let n = 0;
+    for (const d of site.dies) if (hash(d * 97 + run.wafer * 3571 + run.seed * 41) < P.shortRate) shorted = d;
+    if (shorted >= 0 && !rec.screen) { n += 2 + Math.floor(hash(run.td * 61 + 9) * 3); run.log.inrush++; }       // full voltage into a shorted die
+    if (c.over > 1 && hash(run.td * 173 + run.seed * 19) < Math.min(0.9, (c.over - 1) * 2.5)) n += 1 + Math.floor((c.over - 1) * 4);
+    run.log.maxPeak = Math.max(run.log.maxPeak, c.iPeak);
+    if (n) { run.burnt += n; sum.burns++; ev.push('burn'); out.burn = n; }
+    if (run.burnt >= P.maxBurnt) { sum.dead = true; run.done = true; ev.push('dead'); run.t += MOVE_T; return out; }
+  }
+  if (L.bump) run.log.maxDD = Math.max(run.log.maxDD, c.dD);
   for (const d of site.dies) {
-    const good = truthFor(run, d);
+    const good = d === shorted ? false : truthFor(run, d);
     const r = hash(d * 71 + run.td * 13 + run.seed * 7 + run.wafer * 101);
     let res;
     if (!good) res = 2;
@@ -186,9 +227,9 @@ export function step(run, rec) {
   }
   if (c.odLast <= 0) { sum.opens++; ev.push('open'); }
   if (c.breach) ev.push('breach');
-  if (out.dies.some((x) => x.hurt === 2)) ev.push('crack');
+  if (out.dies.some((x) => x.hurt === 2)) ev.push(L.bump ? 'squash' : 'crack');
   run.sinceClean++; run.td++;
-  const dt = MOVE_T + L.test; run.t += dt; heat(run, dt, false);
+  const dt = MOVE_T + testTime(L, rec); run.t += dt; heat(run, dt, false);
   if (run.td % run.sites.length === 0) {
     run.hist.push({ res: run.res.slice(), dmg: run.dmg.slice() }); ev.push('wafer');
     if (++run.wafer >= L.wafers) run.done = true; else { run.res.fill(0); run.dmg.fill(0); }
@@ -200,11 +241,12 @@ export function step(run, rec) {
 export function score(run) {
   const { L, sum } = run;
   const goodAll = DIES * L.wafers * 0.955;                               // expected good dies in the whole lot
-  const base = 100 * sum.shipped / Math.max(1, (sum.bent || sum.stopped) ? goodAll : Math.max(sum.good, 1));
+  const base = 100 * sum.shipped / Math.max(1, (sum.bent || sum.stopped || sum.dead) ? goodAll : Math.max(sum.good, 1));
   const cleanPen = L.clean ? run.cleans * L.cleanCost : 0;
   const over = Math.max(0, run.t - L.budget), timePen = 40 * over / L.budget;
-  const cardPen = sum.bent ? 15 : sum.stopped ? 8 : 0;
-  const s = Math.max(0, Math.min(100, Math.round(base - cleanPen - timePen - cardPen)));
+  const burnPen = L.power ? Math.min(20, run.burnt * 1.5) : 0;        // every burnt probe is a repair
+  const cardPen = sum.bent ? 15 : sum.stopped ? 8 : sum.dead ? 10 : 0;
+  const s = Math.max(0, Math.min(100, Math.round(base - cleanPen - timePen - cardPen - burnPen)));
   const stars = s >= L.stars[2] ? 3 : s >= L.stars[1] ? 2 : s >= L.stars[0] ? 1 : 0;
-  return { score: s, stars, base, cleanPen, timePen, cardPen, over, t: run.t };
+  return { score: s, stars, base, cleanPen, timePen, cardPen, burnPen, over, t: run.t };
 }

@@ -48,6 +48,22 @@ window.VOICE = {
   "src": "les6_c45d4315e3.mp3",
   "d": 10.49
  },
+ "l7": {
+  "src": "l7_05212ef392.mp3",
+  "d": 17.95
+ },
+ "les7": {
+  "src": "les7_cde3fd6ecd.mp3",
+  "d": 22.29
+ },
+ "l8": {
+  "src": "l8_80995ff446.mp3",
+  "d": 21.05
+ },
+ "les8": {
+  "src": "les8_f1ecd3ba20.mp3",
+  "d": 21.36
+ },
  "res0": {
   "src": "res0_360cfa78e1.mp3",
   "d": 1.88

@@ -212,6 +212,14 @@ export const SFX = {
     thump(ac, o, t, 85, 0.34, 0.16); twang(ac, o, t + 0.02, 262, 0.13, 0.25, 0.2);
     const e = G(ac, 0), ef = filt(ac, 'bandpass', 3400, 1.2), et = G(ac, 0.5), el = osc(ac, 'square', 53, t, t + 0.35); el.connect(G(ac, 0.5)).connect(et.gain); perc(e, t, 0.22, 0.015, 0.26); send(chain(nz(ac, t, t + 0.35), ef, et, e), o, 0.6);
   },
+  burn(ac, o, t) {                                                // a power probe cooking: mains-like buzz, then the pop
+    const g = G(ac, 0), bp = filt(ac, 'bandpass', 2400, 1.3), tr = G(ac, 0.5), l = osc(ac, 'square', 100, t, t + 0.5);
+    l.connect(G(ac, 0.5)).connect(tr.gain); swell(g, t, 0.3, 0.012, 0.2, 0.16);
+    send(chain(nz(ac, t, t + 0.5), bp, tr, filt(ac, 'lowpass', 3800), g), o, 0.7);
+    const z = ac.createOscillator(), zg = G(ac, 0); z.type = 'sawtooth'; z.frequency.setValueAtTime(92, t); z.frequency.linearRampToValueAtTime(118, t + 0.3); z.start(t); z.stop(t + 0.45);
+    swell(zg, t, 0.13, 0.01, 0.2, 0.14); send(chain(z, filt(ac, 'lowpass', 850, 0.8), zg), o, 0.5);
+    snap(ac, o, t + 0.29, 0.26, 5200, 0.1); thump(ac, o, t + 0.29, 72, 0.45, 0.22);
+  },
   crack(ac, o, t) {                                               // brittle layers under the pad letting go
     const lp = filt(ac, 'lowpass', 2800, 0.6); send(lp, o, 0.9);
     for (let i = 0; i < 5; i++) { const tt = t + i * 0.021 + rnd(0, 0.012), g = G(ac, 0); perc(g, tt, 0.12, 0.003, 0.07); chain(osc(ac, 'triangle', rnd(1100, 2300), tt, tt + 0.12), g, pan(ac, rnd(-0.5, 0.5)), lp); }
@@ -256,7 +264,7 @@ export const SFX = {
   lose(ac, o, t) { [[69, 0], [65, 0.17], [62, 0.36]].forEach(([m, d]) => epiano(ac, o, t + d, midi(m), 0.16, 1.1, { index: 1 })); const g = G(ac, 0); perc(g, t + 0.36, 0.22, 0.01, 0.45); chain(osc(ac, 'sine', 62, t + 0.36, t + 1), g).connect(o.dry); },
   start(ac, o, t) { [74, 77, 81].forEach((m, i) => epiano(ac, o, t + i * 0.12, midi(m), 0.16, i === 2 ? 1.1 : 0.5, { p: -0.3 + 0.3 * i })); SFX.whoosh(ac, o, t + 0.05, { up: true }); thump(ac, o, t + 0.24, 70, 0.22, 0.2); },
 };
-const DUCK = { breach: [0.45, 0.5], crack: [0.5, 0.45], bend: [0.18, 1.4], alarm: [0.4, 0.8], win: [0.3, 2.6], lose: [0.35, 1.6], reveal: [0.55, 1.2], star: [0.6, 0.5], wafer: [0.6, 0.6] };   // score level, hold seconds
+const DUCK = { burn: [0.4, 0.7], breach: [0.45, 0.5], crack: [0.5, 0.45], bend: [0.18, 1.4], alarm: [0.4, 0.8], win: [0.3, 2.6], lose: [0.35, 1.6], reveal: [0.55, 1.2], star: [0.6, 0.5], wafer: [0.6, 0.6] };   // score level, hold seconds
 
 /** The effect bus: a shared short room and a hall send, with the top end tamed. */
 function sfxBus(ac, dest) {

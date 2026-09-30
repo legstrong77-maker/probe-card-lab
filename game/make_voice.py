@@ -21,8 +21,10 @@ def spoken(t):
     """Screen text -> what the voice should say: units and digits spelled out."""
     t = re.sub(r"(\d+)\s*[–~～]\s*(\d+)", r"\1到\2", t)
     t = t.replace("μm", "微米").replace("°C", "度").replace("kgf", "公斤").replace("AI ", "AI")
+    t = re.sub(r"(\d+(?:\.\d+)?)\s*%", r"百分之\1", t)
+    t = re.sub(r"(\d)\s*A(?![A-Za-z])", r"\1安培", t)
     t = re.sub(r"(?<![\d.])2\s*g\b", "兩克", t)
-    t = re.sub(r"(\d)\s*g\b", r"\1克", t)
+    t = re.sub(r"(\d)\s*g(?![A-Za-z])", r"\1克", t)
     t = re.sub(r"\d+(?:\.\d+)?", N.cn_number, t)
     return re.sub(r"(?<=[一-鿿])\s+(?=[一-鿿])", "", t)
 
