@@ -3,7 +3,7 @@
   python narration.py tts   # synthesize lines, retime the tour, write narration.js / narration.json
   python narration.py mix   # mux narration into build/silent.mp4 -> probe-card-lab.mp4
 
-Voice: Gemini 3.8 Flash TTS (voice Kore). Each line gets one take; local faster-whisper transcribes it,
+Voice: Gemini 3.8 Flash Lite TTS (voice Kore). Each line gets one take; local faster-whisper transcribes it,
 and if it hears a misread the line is retaken (up to four) and the take closest to the script wins. The API key comes
 from GEMINI_API_KEY or a `.env` file in this folder or any parent — it is never stored in the repo.
 If the free key runs out of its daily quota and GEMINI_API_KEY_PAID (a key from a billed project) is set,
@@ -22,7 +22,7 @@ TAKES_DIR = os.path.join(HERE, "build", "tts")
 GAP, LEAD = 0.18, 0.15          # pause between lines, delay after an anchor
 
 ENGINE = os.environ.get("NARR_ENGINE", "gemini")
-GEMINI_MODEL, GEMINI_VOICE = "gemini-3.8-flash-tts", "Kore"
+GEMINI_MODEL, GEMINI_VOICE = "gemini-3.8-flash-lite-tts", "Kore"   # full 3.8 Flash TTS: "gemini-3.8-flash-tts"
 # Only the TRANSCRIPT is spoken. Plain "Say ...:" prompts get read aloud, and extra pronunciation
 # notes made the model ad-lib, so the notes stay short and about delivery only.
 STYLE = ("### DIRECTOR'S NOTES\n"
@@ -87,7 +87,8 @@ def gemini_key(name="GEMINI_API_KEY", required=True):
 
 # Free key first. If it hits its daily limit and GEMINI_API_KEY_PAID (a key from a billed project) exists,
 # switch to that key for the rest of the run and keep count of what it cost.
-PRICE_IN, PRICE_OUT, AUDIO_TOK_PER_S = 0.50, 9.00, 25      # USD per 1M tokens, 3.8 Flash TTS until 2026-12-31
+# USD per 1M tokens until 2026-12-31 (text in, audio out); 25 audio tokens per second
+PRICE_IN, PRICE_OUT, AUDIO_TOK_PER_S = 0.50, {"gemini-3.8-flash-tts": 9.00, "gemini-3.8-flash-lite-tts": 6.00}.get(GEMINI_MODEL, 10.0), 25
 _last_call = [0.0]
 _api = {"clients": [], "i": 0, "paid_req": 0, "paid_audio_s": 0.0, "paid_in_tok": 0}
 
@@ -134,13 +135,32 @@ def gemini_synth(_unused, types, text):
     sys.exit("Gemini TTS failed repeatedly")
 
 
-DIG = dict(zip("0123456789", "零一二三四五六七八九"))
+DIG = "零一二三四五六七八九"
+
+
+def cn_number(m):
+    """'100' -> 一百, '5.5' -> 五點五, so whisper writing digits doesn't read as a misread."""
+    whole, _, frac = m.group(0).partition(".")
+    n, out = int(whole), ""
+    if n >= 10000 or n == 0:
+        out = "".join(DIG[int(c)] for c in whole)
+    else:
+        units = [(1000, "千"), (100, "百"), (10, "十"), (1, "")]
+        zero = False
+        for v, u in units:
+            q = n // v % 10
+            if q:
+                out += ("零" if zero and out else "") + ("" if (v == 10 and q == 1 and not out) else DIG[q]) + u
+                zero = False
+            elif out:
+                zero = True
+    return out + ("點" + "".join(DIG[int(c)] for c in frac) if frac else "")
 
 
 def syllables(text):
     """Toneless pinyin for Chinese, single letters for Latin, so ASR homophones don't count as misreads."""
     from pypinyin import lazy_pinyin
-    text = re.sub(r"[0-9]", lambda m: DIG[m.group(0)], text)
+    text = re.sub(r"\d+(?:\.\d+)?", cn_number, text)
     out = []
     for tok in re.findall(r"[A-Za-z]+|[^A-Za-z]+", text):
         if tok.isascii() and tok.isalpha():

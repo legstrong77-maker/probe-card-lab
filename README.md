@@ -33,7 +33,7 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 |---|---|
 | `index.html` | 整個模擬器（three.js，從 CDN 載入） |
 | `narration.js`、`audio/` | 導覽旁白與時間軸（由 `narration.py` 產生） |
-| `narration.py` | 用 Gemini 3.8 Flash TTS（Kore）合成旁白，每句錄兩次，再用本機 faster-whisper 聽寫比對，挑錯字最少的一次。接著依句長拉長導覽時間軸，把聲音混進影片。API 金鑰從 `GEMINI_API_KEY` 或上層資料夾的 `.env` 讀取，不在 repo 裡 |
+| `narration.py` | 用 Gemini 3.8 Flash Lite TTS（Kore）合成旁白，每句錄一次，用本機 faster-whisper 聽寫比對，念錯就重錄，挑錯字最少的一次。接著依句長拉長導覽時間軸，把聲音混進影片。API 金鑰從 `GEMINI_API_KEY` 或上層資料夾的 `.env` 讀取，不在 repo 裡 |
 | `record.py` | 用無頭 Chromium 逐幀錄下導覽，輸出 1080p30 MP4 |
 
 ## 重新錄影片
