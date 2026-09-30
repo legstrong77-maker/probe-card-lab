@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Final Test Board Lab · 成品測試板拆解</title>
+<meta name="description" content="在瀏覽器裡拆開成品測試（FT）的介面：測試機、彈簧針、測試載板、測試座、分類機。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070b; --panel:#0a0e15; --card:#0e131c; --line:#1b2330; --line2:#273142;
+  --text:#e8edf4; --muted:#8d98aa; --dim:#566174;
+  --accent:#4cc9f0; --dis:#70c883;
+  --red:#ff5d5d; --amber:#ffb224; --green:#48d38a;
+  --spring:#ffc861; --elast:#7fd6ff;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:Inter,"Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{overflow:hidden}
+button{font:inherit;color:inherit}
+#app{display:grid;grid-template-columns:minmax(0,1fr) 600px;height:100vh;width:100vw}
+#stage{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 40% 28%,#0d1522 0%,#05070b 62%)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#gl:active{cursor:grabbing}
+#leaders{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;width:max-content;padding:6px 10px 7px 10px;border-left:2px solid var(--line2);background:rgba(9,13,20,.86);border-radius:0 6px 6px 0;transform:translate(-9999px,0)}
+.lbl.flip{border-left:0;border-right:2px solid var(--line2);border-radius:6px 0 0 6px}
+.lbl.dis.flip{border-right-color:var(--dis)}
+.lbl .t{font-size:14px;font-weight:700;white-space:nowrap}
+.lbl .t small{font-weight:500;color:var(--muted);font-size:11.5px;margin-left:6px}
+.lbl .d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.35;white-space:nowrap}
+#labels[data-mode=compact] .lbl{padding:4px 9px 5px}
+#labels[data-mode=compact] .lbl .d{display:none}
+#labels[data-mode=compact] .lbl .t{font-size:13px}
+#labels[data-mode=tiny] .lbl{padding:3px 7px 3px 7px}
+#labels[data-mode=tiny] .lbl .d,#labels[data-mode=tiny] .lbl .t small,#labels[data-mode=tiny] .tag.mate{display:none}
+#labels[data-mode=tiny] .lbl .t{font-size:11.5px}
+#labels[data-mode=tiny] .tag{font-size:8px;padding:2px 3px 1px;margin-left:5px;vertical-align:1px}
+.lbl.dis{border-left-color:var(--dis);background:rgba(16,34,52,.9)}
+.tag{display:inline-block;font:700 9.5px/1 var(--mono);letter-spacing:.8px;color:#06140c;background:var(--dis);padding:3px 5px 2px;border-radius:3px;margin-left:7px;vertical-align:2px}
+.tag.mate{background:#3a4456;color:#cfd7e3}
+
+.brand{position:absolute;left:28px;top:24px;pointer-events:none;z-index:1}
+.brand::before{content:"";position:absolute;left:-28px;top:-24px;width:620px;height:170px;background:radial-gradient(ellipse at 0 0,rgba(5,7,11,.88),rgba(5,7,11,0) 70%);z-index:-1}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:2.2px;color:var(--accent);text-transform:uppercase}
+.brand h1{margin:9px 0 5px;font-size:31px;font-weight:900;letter-spacing:1px}
+.brand p{margin:0;color:var(--muted);font-size:13.5px}
+
+.hud{position:absolute;right:20px;top:20px;width:214px;padding:12px 13px 8px;border:1px solid var(--line);background:rgba(8,11,17,.8);border-radius:10px}
+.hud .eyebrow{margin-bottom:8px;display:flex;justify-content:space-between}
+.hud .eyebrow span{color:var(--muted)}
+#bins{width:188px;height:100px;display:block;margin:0 auto 6px}
+.stat{display:flex;justify-content:space-between;font:500 11px/1.85 var(--mono);color:var(--muted)}
+.stat b{color:var(--text);font-weight:700}
+
+#speed{position:absolute;top:124px;left:28px;padding:7px 14px;border-radius:999px;font:700 13px/1 var(--mono);letter-spacing:1.5px;background:rgba(76,201,240,.14);border:1px solid rgba(76,201,240,.6);color:#c9f1ff;display:none;white-space:nowrap}
+#speed.pause{background:rgba(255,178,36,.14);border-color:rgba(255,178,36,.7);color:#ffe2a8}
+#toasts{position:absolute;top:66px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:760px;max-width:92%}
+.toast{padding:10px 16px;border-radius:9px;background:rgba(42,10,13,.92);border:1px solid rgba(255,93,93,.65);font-size:14.5px;font-weight:700;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast small{display:block;font-weight:500;color:#ffc9c9;font-size:12px;margin-top:2px}
+.toast.warn{background:rgba(44,30,6,.92);border-color:rgba(255,178,36,.7)}
+.toast.warn small{color:#ffe3ad}
+.toast.ok{background:rgba(8,36,24,.92);border-color:rgba(72,211,138,.7)}
+.toast.ok small{color:#bff0d4}
+
+#phases{position:absolute;left:28px;bottom:26px;display:flex;gap:4px;pointer-events:none}
+.ph{position:relative;width:98px;padding:8px 10px 7px;border:1px solid var(--line);background:rgba(8,11,17,.75);border-radius:6px;overflow:hidden;font:600 10.5px/1.2 var(--mono);letter-spacing:1px;color:var(--dim)}
+.ph small{display:block;font:500 11.5px/1.3 var(--sans);letter-spacing:0;margin-top:3px}
+.ph i{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);width:0}
+.ph.on{color:var(--text);border-color:rgba(76,201,240,.55);background:rgba(14,34,46,.8)}
+
+#caption{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:92%;text-align:center;pointer-events:none;opacity:0}
+#caption .zh{display:block;font-size:31px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 20px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
+#caption .en{display:block;margin-top:7px;font-size:16.5px;color:#bcc6d4;font-weight:500;text-shadow:0 2px 12px rgba(0,0,0,.95)}
+
+#endcard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(4,6,10,.9);opacity:0;pointer-events:none;text-align:center;padding:24px}
+#endcard .big{font-size:44px;font-weight:900;letter-spacing:1px}
+#endcard .en{font-size:20px;color:#c3ccd9}
+#endcard .by{margin-top:18px;font:600 13px var(--mono);letter-spacing:2px;color:var(--accent)}
+#endcard .hint{font-size:13px;color:var(--muted)}
+
+#cursor{position:fixed;left:0;top:0;width:28px;height:28px;pointer-events:none;z-index:50;opacity:0;transform:translate(-200px,-200px)}
+#ripple{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid #fff;pointer-events:none;z-index:49;opacity:0}
+
+#panel{background:var(--panel);border-left:1px solid var(--line);padding:16px 20px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+#panel>*{flex-shrink:0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sec-head .r{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
+.sec-head .r b{color:var(--text)}
+#scope{width:100%;aspect-ratio:560/270;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
+.cmp{display:grid;grid-template-columns:128px 1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.cmp>div{padding:5px 12px;border-bottom:1px solid var(--line);font:600 13px/1.3 var(--mono);display:flex;align-items:center;min-height:31px}
+.cmp>div:nth-last-child(-n+3){border-bottom:0}
+.cmp .k{color:var(--muted);font:500 12px/1.2 var(--sans);flex-direction:column;align-items:flex-start;justify-content:center}
+.cmp .k small{font-size:11px;color:var(--dim)}
+.cmp .h{font:700 11px/1.2 var(--mono);letter-spacing:1.4px;flex-direction:column;align-items:flex-start}
+.cmp .h small{font:500 11px var(--sans);letter-spacing:0;color:var(--muted)}
+.cmp .h.s{color:var(--spring)} .cmp .h.e{color:var(--elast)}
+.bar{position:relative;flex:1;height:7px;border-radius:4px;background:#1a212c;margin-left:10px;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:4px;background:var(--green)}
+.good{color:var(--green)} .mid{color:var(--amber)} .bad{color:var(--red)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.charts canvas{width:100%;height:118px;display:block}
+.charts .sec-head{margin-bottom:4px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
+.ctl{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:4px}
+.ctl>span{font-size:12.5px;font-weight:600;white-space:nowrap}
+.ctl>span small{color:var(--muted);font-weight:500;margin-left:5px}
+.ctl output{font:600 12.5px var(--mono);color:var(--accent);white-space:nowrap}
+.ctl input,.ctl .seg{grid-column:1/-1}
+.full{grid-column:1/-1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) 0 var(--p,0%),#1f2733 var(--p,0%) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(76,201,240,.12)}
+input[type=range].grab::-webkit-slider-thumb{box-shadow:0 0 0 9px rgba(76,201,240,.28)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:#1f2733}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent)}
+.seg{display:flex;gap:4px}
+.seg button,.tog,.btn{border:1px solid var(--line2);background:#101722;border-radius:7px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;color:inherit;text-align:center}
+.seg button{flex:1}
+.seg button.on,.tog.on{background:rgba(76,201,240,.15);border-color:var(--accent);color:#d2f3ff}
+.btn.primary{background:rgba(112,200,131,.14);border-color:var(--dis);color:#d6f5dd}
+.press{transform:scale(.94);filter:brightness(1.5)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row .tog,.row .btn{flex:1}
+#planLine{font:500 11.5px/1.45 var(--mono);color:var(--muted);padding:6px 10px;border:1px dashed var(--line2);border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:9px}
+.foot b{color:var(--text)}
+.foot .dis{color:var(--dis);font-weight:700}
+.foot a{color:#8fd8f5}
+
+#refs{position:fixed;inset:0;z-index:60;background:rgba(3,5,9,.8);display:none;align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
+#refs.open{display:flex}
+#refs .box{max-width:1000px;width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:22px 24px 26px;box-shadow:0 20px 80px rgba(0,0,0,.6)}
+#refs h2{margin:0 0 6px;font-size:22px;font-weight:800}
+#refs h3{margin:24px 0 10px;font:600 12px var(--mono);letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+#refs p{color:var(--muted);font-size:13px;line-height:1.6;margin:0}
+#refs .x{float:right;margin:-4px -6px 0 12px}
+#refs .tbl{overflow-x:auto}
+#refs table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.5;min-width:640px}
+#refs th,#refs td{border-bottom:1px solid var(--line);padding:8px 10px 8px 0;text-align:left;vertical-align:top}
+#refs th{color:var(--dim);font:600 11px var(--mono);letter-spacing:1px}
+#refs td:first-child{font-weight:700;white-space:nowrap;color:var(--text)}
+#refs td.real{color:#c9d2de}
+#refs td.sim{color:var(--muted)}
+#refs ol{margin:0;padding-left:26px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+#refs ol.steps li{margin-bottom:6px} #refs ol.steps b{color:var(--text)}
+#refs a{color:#8fd8f5;text-decoration:none} #refs a:hover{text-decoration:underline}
+#refs .c{font:600 10.5px var(--mono);white-space:nowrap}
+#refs .c a{margin-left:3px}
+@media (max-width:560px){#refs{padding:0}#refs .box{border-radius:0;padding:18px 14px 28px}#refs td:first-child{white-space:normal}}
+html.rec *{transition:none!important;animation:none!important}
+html.rec #gl{cursor:default}
+
+@media (max-width:1100px){
+  body{overflow:auto}
+  #app{display:block;height:auto}
+  #stage{height:62vh;height:62svh;min-height:340px}
+  #gl{touch-action:pan-y}
+  #panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .controls{order:1} #planLine{order:2} #hScope{order:3} #scope{order:4} .cmp{order:5} .charts{order:6} .foot{order:8}
+  .hud{transform:scale(.8);transform-origin:top right}
+  .brand{left:16px;top:14px} .brand h1{font-size:22px} .brand p{display:none}
+  #speed{top:74px;left:16px}
+  #phases{left:12px;bottom:12px}.ph{width:auto;padding:6px 7px}
+  #caption{bottom:74px} #caption .zh{font-size:24px} #caption .en{font-size:14px}
+  #cursor,#ripple{display:none}
+}
+@media (max-width:560px){
+  #stage{height:58vh;height:58svh}
+  #panel{padding:14px 14px}
+  .controls{grid-template-columns:1fr;gap:12px}
+  .cmp{grid-template-columns:92px 1fr 1fr}
+  .cmp>div{padding:5px 8px;font-size:12px}
+  .charts{grid-template-columns:1fr}
+  .hud{display:none}
+  .eyebrow{font-size:9.5px;letter-spacing:1.6px}
+  .brand h1{font-size:19px;margin:6px 0 0}
+  #phases{left:8px;right:8px;bottom:8px;gap:3px}
+  .ph{flex:1;padding:4px 5px;font-size:8px;letter-spacing:.4px}
+  .ph small{font-size:10px;margin-top:1px}
+  #caption{bottom:52px;width:96%} #caption .zh{font-size:17px;letter-spacing:.3px} #caption .en{font-size:11.5px;margin-top:4px}
+  #speed{left:8px;right:auto;top:64px;font-size:9.5px;padding:5px 9px;letter-spacing:.8px}
+  #toasts{top:48px;width:94%}
+  .toast{font-size:12.5px;padding:7px 10px} .toast small{font-size:10.5px}
+  #endcard .big{font-size:24px} #endcard .en{font-size:14px} #endcard .by{font-size:10px}
+  .sec-head{flex-wrap:wrap}
+  #planLine{white-space:normal}
+}
+@media (pointer:coarse){
+  input[type=range]{height:32px}
+  input[type=range]::-webkit-slider-thumb{width:26px;height:26px;margin-top:-10px}
+  .seg button,.tog,.btn{padding:10px 12px;font-size:13px}
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script src="narration.js"></script>
+<script src="sources.js"></script>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <svg id="leaders"></svg>
+    <div id="labels"></div>
+    <div class="brand">
+      <div class="eyebrow">Final Test Board Lab · Package Test (FT)</div>
+      <h1>成品測試板拆解實驗室</h1>
+      <p>Take a final-test interface apart in your browser — tester to solder ball.</p>
+    </div>
+    <div class="hud">
+      <div class="eyebrow">Results <span id="lotNo">tray #1</span></div>
+      <canvas id="bins"></canvas>
+      <div class="stat">TESTED <b id="stTested">0</b></div>
+      <div class="stat">FIRST-PASS YIELD <b id="stYield">—</b></div>
+      <div class="stat">THROUGHPUT <b id="stUph">—</b></div>
+      <div class="stat">INSERTIONS / SOCKET <b id="stIns">0</b></div>
+      <div class="stat">SINCE CLEAN <b id="stClean">0</b></div>
+    </div>
+    <div id="speed"></div>
+    <div id="toasts"></div>
+    <div id="phases">
+      <div class="ph">PICK<small>取料</small><i></i></div>
+      <div class="ph">PLACE<small>移到測試座</small><i></i></div>
+      <div class="ph">PLUNGE<small>下壓接觸</small><i></i></div>
+      <div class="ph">TEST<small>電性測試</small><i></i></div>
+      <div class="ph">SORT<small>分類</small><i></i></div>
+    </div>
+    <div id="caption"><span class="zh"></span><span class="en"></span></div>
+    <div id="endcard">
+      <div class="big">從晶圓到成品，每一顆都要碰兩次</div>
+      <div class="en">Every chip gets touched twice — once on the wafer, once in the package.</div>
+      <div class="by">BUILT WITH CLAUDE OPUS 5.5 · RUNS LIVE IN THE BROWSER</div>
+      <div class="hint" id="endHint"></div>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <div class="sec-head" id="hScope"><span class="eyebrow">Microscope · 接點顯微（同一下壓行程）</span><span class="r">stroke <b id="zNow">0.00</b> mm</span></div>
+    <canvas id="scope"></canvas>
+    <div class="cmp">
+      <div class="k"></div><div class="h s">CENTER BALL<small>中心的錫球 · 最先碰到</small></div><div class="h e">CORNER BALL<small>角落的錫球 · 最後碰到</small></div>
+      <div class="k">Pin travel<small>探針壓縮量</small></div><div id="tC">—</div><div id="tK">—</div>
+      <div class="k">Force<small>接觸力</small></div><div id="fC">—</div><div id="fK">—</div>
+      <div class="k">CRES<small>接觸電阻</small></div><div id="rC">—</div><div id="rK">—</div>
+      <div class="k">Travel used<small>行程 / 上限</small></div><div><span id="pC">0%</span><span class="bar"><i id="bC"></i></span></div><div><span id="pK">0%</span><span class="bar"><i id="bK"></i></span></div>
+    </div>
+    <div class="charts">
+      <div><div class="sec-head"><span class="eyebrow">Force vs stroke · 接觸力</span></div><canvas id="chart"></canvas></div>
+      <div><div class="sec-head"><span class="eyebrow">Throughput · 每小時產出</span><span class="r"><b id="uphNow">—</b></span></div><canvas id="uph"></canvas></div>
+    </div>
+    <div id="planLine"></div>
+    <div class="controls">
+      <label class="ctl"><span>Stroke<small>下壓行程</small></span><output id="strokeOut">0.40 mm</output><input id="stroke" type="range" min="0" max="80" step="1" value="40"></label>
+      <label class="ctl"><span>Package warpage<small>封裝翹曲</small></span><output id="warpOut">0.05 mm</output><input id="warp" type="range" min="0" max="40" step="1" value="5"></label>
+      <label class="ctl"><span>Test time<small>測試時間</small></span><output id="testOut">3.0 s</output><input id="test" type="range" min="0" max="100" step="1" value="40"></label>
+      <label class="ctl"><span>Index time<small>換料時間</small></span><output id="idxOut">0.6 s</output><input id="idx" type="range" min="0" max="100" step="1" value="30"></label>
+      <div class="ctl"><span>Sites<small>同測顆數</small></span><output id="nOut">×4</output>
+        <div class="seg" id="segN"><button data-n="1">×1</button><button data-n="2">×2</button><button data-n="4" class="on">×4</button><button data-n="8">×8</button></div></div>
+      <label class="ctl"><span>Explode<small>拆解</small></span><output id="exOut">0%</output><input id="explode" type="range" min="0" max="100" step="1" value="0"></label>
+      <div class="ctl full"><span>Time<small>時間</small></span><output id="tsOut">1×</output>
+        <div class="seg" id="segT"><button data-ts="0.1">1/10×</button><button data-ts="1" class="on">1×</button><button data-ts="10">10×</button><button data-ts="60">60×</button><button data-ts="0">❚❚</button></div></div>
+      <div class="row full"><button id="tCut" class="tog">Cut open 剖開</button><button id="tTrace" class="tog">Trace signal 訊號路徑</button><button id="tLabels" class="tog on">Labels 標籤</button></div>
+      <div class="row full"><button id="tour" class="btn primary">▶ Guided tour 導覽</button><button id="clean" class="btn">Clean sockets 清潔測試座</button><button id="refsBtn" class="btn">參數依據 Sources</button></div>
+      <div class="row full"><a class="btn" href="../">← 探針卡拆解實驗室 Probe Card Lab</a><a class="btn" href="../game/">🎮 遊戲 Game</a></div>
+    </div>
+    <div class="foot" id="foot"></div>
+  </aside>
+</div>
+<div id="refs"><div class="box" id="refsBox"></div></div>
+<svg id="cursor" viewBox="0 0 28 28"><path d="M4 2 L4 22 L9.2 17.4 L12.6 25 L16 23.5 L12.7 16.1 L19.6 16.1 Z" fill="#fff" stroke="#0b0f16" stroke-width="1.6" stroke-linejoin="round"/></svg>
+<div id="ripple"></div>
+<script type="module" src="main.js"></script>
+</body>
+</html>

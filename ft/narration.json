@@ -1,0 +1,167 @@
+{
+ "retime": [
+  [
+   6.2,
+   2.58
+  ],
+  [
+   14.2,
+   5.07
+  ],
+  [
+   30.6,
+   1.26
+  ],
+  [
+   37.2,
+   2.92
+  ],
+  [
+   42.0,
+   1.95
+  ],
+  [
+   55.8,
+   4.8
+  ]
+ ],
+ "lines": [
+  {
+   "t": 0.45,
+   "d": 5.97,
+   "zh": "封裝好的晶片，出貨前還要再測一次，這一站叫成品測試。",
+   "en": "A packaged chip is tested once more before it ships. This step is final test.",
+   "cap": true,
+   "src": "audio/15a9f1e4f1.mp3"
+  },
+  {
+   "t": 6.6,
+   "d": 3.05,
+   "zh": "分類機一次抓起四顆，壓進測試座。",
+   "en": "The handler picks four at a time and presses them into the sockets.",
+   "cap": true,
+   "src": "audio/5069583b38.mp3"
+  },
+  {
+   "t": 9.83,
+   "d": 2.43,
+   "zh": "把整個測試介面拆開。",
+   "en": "Take the whole interface apart.",
+   "cap": true,
+   "src": "audio/7bed9cc038.mp3"
+  },
+  {
+   "t": 12.44,
+   "d": 6.86,
+   "zh": "由下往上：測試頭、彈簧針介面、測試載板、測試座、晶片。",
+   "en": "Bottom to top: test head, spring-pin interface, load board, sockets, devices.",
+   "cap": true,
+   "src": "audio/897180256c.mp3"
+  },
+  {
+   "t": 19.48,
+   "d": 3.24,
+   "zh": "中間這塊測試載板，是 DIS 做的。",
+   "en": "The load board in the middle is what DIS builds.",
+   "cap": true,
+   "src": "audio/2aa34df554.mp3"
+  },
+  {
+   "t": 22.9,
+   "d": 4.77,
+   "zh": "追一條訊號：從測試頭往上，穿過載板的內層，",
+   "en": "Follow one signal: up from the test head, through the inner layers of the board,",
+   "cap": true,
+   "src": "audio/f5f4fbd0e6.mp3"
+  },
+  {
+   "t": 27.85,
+   "d": 3.01,
+   "zh": "再經過測試座裡的彈簧針，到達錫球。",
+   "en": "then through a spring probe in the socket, to a solder ball.",
+   "cap": true,
+   "src": "audio/54018b744b.mp3"
+  },
+  {
+   "t": 35.7,
+   "d": 4.58,
+   "zh": "剖開測試座：每顆錫球底下，都有一支彈簧針。",
+   "en": "Cut a socket open: there is one spring probe under every ball.",
+   "cap": true,
+   "src": "audio/dede2aaab0.mp3"
+  },
+  {
+   "t": 40.46,
+   "d": 2.04,
+   "zh": "時間放慢十倍。",
+   "en": "Slow time down ten times.",
+   "cap": true,
+   "src": "audio/ef621eb0e9.mp3"
+  },
+  {
+   "t": 42.68,
+   "d": 7.12,
+   "zh": "壓頭往下壓，彈簧針縮進去零點四毫米，每支推回來將近三十克。",
+   "en": "The pusher comes down; every pin compresses 0.4 mm and pushes back with nearly 30 grams.",
+   "cap": true,
+   "src": "audio/7e44600a5a.mp3"
+  },
+  {
+   "t": 49.98,
+   "d": 2.62,
+   "zh": "凍結時間，讓封裝翹曲。",
+   "en": "Freeze time and warp the package.",
+   "cap": true,
+   "src": "audio/d0ad2f25e3.mp3"
+  },
+  {
+   "t": 53.38,
+   "d": 3.17,
+   "zh": "角落的錫球碰不到探針，變紅了。",
+   "en": "The corner balls no longer reach their pins — they turn red.",
+   "cap": true,
+   "src": "audio/b1be376daa.mp3"
+  },
+  {
+   "t": 56.73,
+   "d": 3.93,
+   "zh": "那就加大下壓行程⋯⋯直到探針壓到底。",
+   "en": "So add more stroke… until the pins bottom out.",
+   "cap": true,
+   "src": "audio/8858c58c53.mp3"
+  },
+  {
+   "t": 63.43,
+   "d": 5.27,
+   "zh": "最後看產出：同測顆數從四顆變八顆，",
+   "en": "Finally, throughput: go from four sites to eight,",
+   "cap": true,
+   "src": "audio/e16ff53b47.mp3"
+  },
+  {
+   "t": 68.88,
+   "d": 5.67,
+   "zh": "每小時產出卻沒有加倍，因為換料時間還在，測試時間也變長了。",
+   "en": "and the output does not double: the index time is still there, and the test takes longer.",
+   "cap": true,
+   "src": "audio/079abf2a70.mp3"
+  },
+  {
+   "t": 74.73,
+   "d": 3.9,
+   "zh": "從晶圓到成品，每一顆晶片都要被碰兩次。",
+   "en": "From wafer to package, every chip gets touched twice.",
+   "cap": false,
+   "src": "audio/eeb51feb14.mp3"
+  },
+  {
+   "t": 78.81,
+   "d": 4.39,
+   "zh": "用 Claude Opus 5.5 做的，直接在瀏覽器裡就能玩。",
+   "en": "Built with Claude Opus 5.5 — it runs live in your browser.",
+   "cap": false,
+   "src": "audio/583ec5acb1.mp3"
+  }
+ ],
+ "end": 84.8
+}

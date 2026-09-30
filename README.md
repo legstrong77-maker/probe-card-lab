@@ -4,6 +4,8 @@
 
 **🎮 遊戲「找出它的極限」：https://legstrong77-maker.github.io/probe-card-lab/game/**
 
+**成品測試板拆解實驗室（Final Test）：https://legstrong77-maker.github.io/probe-card-lab/ft/** · [說明與參考來源](ft/README.md)
+
 這是一張在瀏覽器裡就能拆開的晶圓針測（CP）探針卡。
 
 - **拆解**：從彈簧針塔一路拆到晶圓，每一層都有標籤。
