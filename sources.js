@@ -32,7 +32,19 @@ window.SOURCES = {
     { p: '主板層數', sim: '標示「數十層」', real: '公開的探針卡 PCB 例子為 42–76 層、厚 2.7–9.6 mm', r: [33] },
     { p: '探針卡結構與 DIS', sim: '彈簧針塔 → 補強板 → 主板 → MLO 載板 → 探針頭 → 晶圓', real: '主板、（中介層）、空間轉換板、探針頭的組成與專利描述一致；補強板是機構件，不在訊號路徑上。DIS Tech 在 2024 年 5 月由 Technoprobe 自 Teradyne 收購', r: [31, 32, 34, 35, 36] },
   ],
-  left: '模擬器沒有做的部分：溫度、上片與對位、針痕檢查、探針磨耗與壽命（公開資料為 100 萬次以上）、電流承載能力，以及整張卡受力後的變形（高針數卡上，實際過驅量只有設定值的一部分）。',
+  // the game (game/) adds these mechanics on top of the simulator's model
+  game: [
+    { p: '誤判', sim: '最後碰到的探針接觸電阻超過 0.5 Ω 開始有好晶粒被判成不良，1.3 Ω 以上約九成（示意）', real: '接觸電阻規格常訂 < 1 Ω；接觸電阻升高是針測誤判的主要來源', r: [13, 18, 29] },
+    { p: '平整度', sim: '最後碰到的探針，實際過驅量 = 過驅量 − 平整度。一般關卡 10–15 μm；第 4 關載板再翹 50 μm，整平後 15 μm', real: '探針平整度規格約 ≤25 μm 或 ±10–20 μm', r: [4, 23, 17] },
+    { p: '小鋁墊（第 2 關）', sim: '鋁墊 40 μm，對位誤差 ±4 μm', real: '50 μm 間距的產品，鋁墊只有 40 μm 上下；針痕要留在鋁墊內，懸臂針的可用範圍很窄', r: [23, 15, 20] },
+    { p: '鋁墊壓傷', sim: 'Cobra 針實際過驅量 120 μm 以上、MEMS 針 88 μm 以上開始有機率壓傷；125 °C 時從 80 μm 起（示意）', real: '針痕面積隨過驅量變大；車用產品對針痕面積訂有上限，高溫下還有銲球脫落的風險。公開資料沒有通用的門檻值', r: [15, 40] },
+    { p: '清針的代價', sim: '每次清針 12–15 秒，並扣 0.6 分代表針尖磨耗；每次下針讓接觸電阻升高 7–9 mΩ（比實際快，方便在幾片晶圓內看到效果）', real: '常見每 50–100 次清一次；公開例子：每 100 顆晶粒清一次，每次下針 25 下、過驅量 20 μm', r: [29, 30, 40] },
+    { p: '整張卡受力變形（第 5 關）', sim: '10 萬針；總針壓每增加 1 kgf，卡與機台退讓 1 μm；載台上限 300 kgf', real: '4 萬針的卡，實際過驅量最好也只有設定值的一半左右；10 萬針的卡總針壓 170–280 kgf，接近載台約 300 kgf 的上限', r: [38, 25, 26, 24] },
+    { p: '高溫漂移（第 6 關）', sim: '125 °C；冷卡的針尖比熱卡遠 60 μm。升溫時間常數 60 秒，載台移開後以 120 秒冷卻（時間大幅壓縮）', real: '室溫到 90 °C，大面積探針卡的針尖高度可變化 50 μm；175 °C 下最好的卡約 15 μm。實際預熱：機台 2 小時、探針卡 10–15 分鐘。清針、換片把載台移開幾分鐘，針尖高度會再跑掉', r: [39, 40, 41] },
+    { p: '重工整平（第 4 關）', sim: '載板翹曲 50 → 15 μm，花 60 秒（示意）', real: '遊戲設計。實際上是把卡送回供應商重新整平，需要數天', r: [] },
+    { p: '計分', sim: '正確測出且沒受傷的好晶粒比例，再扣清針、超時和損壞的分數', real: '遊戲設計，不是業界指標', r: [] },
+  ],
+  left: '模擬器沒有做的部分：溫度、上片與對位、針痕檢查、探針磨耗與壽命（公開資料為 100 萬次以上）、電流承載能力，以及整張卡受力後的變形（高針數卡上，實際過驅量只有設定值的一部分）。溫度和整張卡的變形，在遊戲的第 5、6 關有簡化的版本。',
   refs: [
     { t: 'Wikipedia — Probe card', u: 'https://en.wikipedia.org/wiki/Probe_card' },
     { t: 'Wikipedia — Wafer testing', u: 'https://en.wikipedia.org/wiki/Wafer_testing' },
@@ -71,5 +83,9 @@ window.SOURCES = {
     { t: 'DIS Tech — company site', u: 'https://www.dis.tech/' },
     { t: 'Teradyne — Form 10-K, fiscal year 2024', u: 'https://www.sec.gov/Archives/edgar/data/97210/000095017025023784/ter-20241231.htm' },
     { t: 'KYEC — Wafer Probing service', u: 'https://www.kyec.com.tw/en/Service/wafer-probing' },
+    { t: 'Huebner (FormFactor) — 40k Probes on 300mm: Another Step Towards 1 Touchdown DRAM Sort, SWTW 2008', u: 'https://www.formfactor.com/wp-content/uploads/S05_02_Huebner_SWTW2008.pdf' },
+    { t: 'US8531202B2 — Probe card test apparatus and method', u: 'https://patents.google.com/patent/US8531202B2/en' },
+    { t: 'Van Cauwenberghe (ON Semiconductor) — Wafer Probe Challenges for the Automotive Market, SWTW 2012', u: 'https://www.swtest.org/swtw_library/2012proc/PDF/S01_03_Cauwenberghe_SWTW2012.pdf' },
+    { t: 'Sinsheimer & Buckholtz (Teradyne) — Wafer Sort at Extreme Temperatures, SWTW 2018', u: 'https://www.swtest.org/swtw_library/2018proc/PDF/P01_02_Buckholtz_SWTW2018.pdf' },
   ],
 };

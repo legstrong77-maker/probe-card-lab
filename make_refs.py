@@ -16,7 +16,9 @@ out = ["<!-- refs:start -->", "## 參數依據與參考來源", "", S["intro"], 
 out += [f"{i}. **{x['zh']}**：{x['d']} {cite(x['r'])}" for i, x in enumerate(S["steps"], 1)]
 out += ["", "### 可調參數對照", "", "| 參數 | 模擬器用的值 | 公開資料的典型範圍 | 來源 |", "|---|---|---|---|"]
 out += [f"| {x['p']} | {x['sim']} | {x['real']} | {cite(x['r'])} |" for x in S["params"]]
-out += ["", S["left"], "", "### 參考文獻", ""]
+out += ["", S["left"], "", "### 遊戲加上的機制", "", "| 機制 | 遊戲用的值 | 公開資料 | 來源 |", "|---|---|---|---|"]
+out += [f"| {x['p']} | {x['sim']} | {x['real']} | {cite(x['r'])} |" for x in S["game"]]
+out += ["", "### 參考文獻", ""]
 out += [f"{i}. [{x['t']}]({x['u']})" for i, x in enumerate(S["refs"], 1)]
 out += ["<!-- refs:end -->"]
 block = "\n".join(out)
@@ -30,4 +32,4 @@ else:
     marker = "## 檔案"
     s = s.replace(marker, block + "\n\n" + marker, 1)
 open(p, "w", encoding="utf-8", newline="\n").write(s)
-print(f"README: {len(S['steps'])} steps, {len(S['params'])} parameters, {len(S['refs'])} references")
+print(f"README: {len(S['steps'])} steps, {len(S['params'])} parameters, {len(S['game'])} game rows, {len(S['refs'])} references")
