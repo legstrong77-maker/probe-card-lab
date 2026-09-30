@@ -4,9 +4,10 @@
   python narration.py mix   # mux narration into build/silent.mp4 -> probe-card-lab.mp4
 
 Voice: Gemini 3.8 Flash TTS (voice Kore). Each line gets two takes; local faster-whisper transcribes
-them and the take closest to the script wins (up to four takes if both misread). The API key comes
+them and the take closest to the script wins (retakes up to four if whisper hears a misread). The API key comes
 from GEMINI_API_KEY or a `.env` file in this folder or any parent — it is never stored in the repo.
-Set NARR_ENGINE=edge to fall back to edge-tts (zh-TW-HsiaoChenNeural).
+If the free key runs out of its daily quota and GEMINI_API_KEY_PAID (a key from a billed project) is set,
+the run switches to it and prints what it cost. Set NARR_ENGINE=edge to fall back to edge-tts.
 
 Each line may carry `at` (a time on the original tour timeline). If the lines before it are still
 talking at that moment, the tour is stretched by inserting a pause at `ins` (default: `at`), so the
@@ -29,7 +30,7 @@ STYLE = ("### DIRECTOR'S NOTES\n"
          "of a semiconductor tech explainer video. Crisp articulation, brisk energetic pace, no long pauses.\n\n"
          "### TRANSCRIPT\n")
 SPACING = 7.0        # free tier allows 10 requests/min per model
-TAKES, MAX_TAKES, CER_OK = 2, 4, 0.08
+TAKES, MAX_TAKES, CER_OK = 1, 4, 0.08     # one take per line; retake only when whisper hears a misread (quota is shared)
 EDGE_VOICE, EDGE_RATE = "zh-TW-HsiaoChenNeural", "+12%"
 
 LINES = [
@@ -66,26 +67,32 @@ def duration(path):
 
 
 # ---------------------------------------------------------------- Gemini TTS + whisper check
-def gemini_key():
-    if os.environ.get("GEMINI_API_KEY"):
-        return os.environ["GEMINI_API_KEY"]
+def gemini_key(name="GEMINI_API_KEY", required=True):
+    if os.environ.get(name):
+        return os.environ[name]
     d = HERE
     while True:
         env = os.path.join(d, ".env")
         if os.path.exists(env):
             for ln in open(env, encoding="utf-8"):
-                if ln.startswith("GEMINI_API_KEY="):
+                if ln.startswith(name + "="):
                     return ln.split("=", 1)[1].strip()
         up = os.path.dirname(d)
         if up == d:
-            sys.exit("GEMINI_API_KEY not found (env var or .env)")
+            if required:
+                sys.exit(f"{name} not found (env var or .env)")
+            return None
         d = up
 
 
+# Free key first. If it hits its daily limit and GEMINI_API_KEY_PAID (a key from a billed project) exists,
+# switch to that key for the rest of the run and keep count of what it cost.
+PRICE_IN, PRICE_OUT, AUDIO_TOK_PER_S = 0.50, 9.00, 25      # USD per 1M tokens, 3.8 Flash TTS until 2026-12-31
 _last_call = [0.0]
+_api = {"clients": [], "i": 0, "paid_req": 0, "paid_audio_s": 0.0, "paid_in_tok": 0}
 
 
-def gemini_synth(client, types, text):
+def gemini_synth(_unused, types, text):
     import io, numpy as np, soundfile as sf
     cfg = types.GenerateContentConfig(
         response_modalities=["AUDIO"],
@@ -94,22 +101,33 @@ def gemini_synth(client, types, text):
     for attempt in range(8):
         time.sleep(max(0.0, _last_call[0] + SPACING - time.time()))
         _last_call[0] = time.time()
+        client, paid = _api["clients"][_api["i"]], _api["i"] > 0
         try:
             r = client.models.generate_content(model=GEMINI_MODEL, contents=STYLE + text, config=cfg)
             part = r.candidates[0].content.parts[0].inline_data
             if part.data[:4] == b"RIFF":                       # WAV with header
                 pcm, rate = sf.read(io.BytesIO(part.data), dtype="float32")
-                return pcm, rate
-            mt, rate = part.mime_type or "", 24000
-            if "rate=" in mt:
-                rate = int(mt.split("rate=")[1].split(";")[0])
-            return np.frombuffer(part.data, dtype="<i2").astype(np.float32) / 32768.0, rate
+            else:
+                mt, rate = part.mime_type or "", 24000
+                if "rate=" in mt:
+                    rate = int(mt.split("rate=")[1].split(";")[0])
+                pcm = np.frombuffer(part.data, dtype="<i2").astype(np.float32) / 32768.0
+            if paid:
+                um = getattr(r, "usage_metadata", None)
+                _api["paid_req"] += 1
+                _api["paid_audio_s"] += len(pcm) / rate
+                _api["paid_in_tok"] += getattr(um, "prompt_token_count", None) or 120
+            return pcm, rate
         except Exception as e:
             msg = str(e)
             m = re.search(r"retryDelay\W+(\d+(?:\.\d+)?)(ms|s)\b", msg)
             wait = (float(m.group(1)) / (1000 if m.group(2) == "ms" else 1) + 2) if m else (30 if "429" in msg else 5)
             if "PerDay" in msg:
-                sys.exit("Gemini TTS daily quota is used up — try again tomorrow or set NARR_ENGINE=edge")
+                if _api["i"] + 1 < len(_api["clients"]):
+                    _api["i"] += 1
+                    print("  free daily quota used up — switching to the paid key", flush=True)
+                    continue
+                sys.exit("Gemini TTS daily quota is used up — add GEMINI_API_KEY_PAID to .env, try tomorrow, or set NARR_ENGINE=edge")
             wait = min(wait, 90)          # the key is shared with other projects; per-minute limits clear quickly
             print(f"  retry {attempt + 1} in {wait}s: {type(e).__name__} {msg[:90]}", flush=True)
             time.sleep(wait)
@@ -166,7 +184,11 @@ def synth_gemini(todo):
     from google import genai
     from google.genai import types
     from faster_whisper import WhisperModel
-    client = genai.Client(api_key=gemini_key())
+    _api["clients"] = [genai.Client(api_key=gemini_key())]
+    paid_key = gemini_key("GEMINI_API_KEY_PAID", required=False)
+    if paid_key:
+        _api["clients"].append(genai.Client(api_key=paid_key))
+    client = None
     asr = WhisperModel("large-v3", device="cuda", compute_type="float16")
     os.makedirs(TAKES_DIR, exist_ok=True)
     report = []
@@ -192,6 +214,9 @@ def synth_gemini(todo):
         report.append(dict(zh=l["zh"], heard=best[2], cer=round(best[0], 3), flag=flag.strip()))
     with open(os.path.join(HERE, "build", "tts_report.json"), "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=1)
+    if _api["paid_req"]:
+        usd = _api["paid_audio_s"] * AUDIO_TOK_PER_S / 1e6 * PRICE_OUT + _api["paid_in_tok"] / 1e6 * PRICE_IN
+        print(f"paid key: {_api['paid_req']} requests, {_api['paid_audio_s']:.0f} s audio ≈ US${usd:.3f}", flush=True)
 
 
 # ---------------------------------------------------------------- edge-tts fallback
