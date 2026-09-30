@@ -1,4 +1,4 @@
-"""Copy the parameter tables and reference lists from sources.js and ft/sources.js into README.md and ft/README.md.
+"""Copy the parameter tables and reference lists from sources.js, ft/sources.js and si/sources.js into README.md, ft/README.md and si/README.md.
 
   python make_refs.py      # needs node, which evaluates the sources files
 
@@ -48,4 +48,20 @@ s2 = open(p2, encoding="utf-8").read()
 a, b = s2.index("<!-- refs:start -->"), s2.index("<!-- refs:end -->") + len("<!-- refs:end -->")
 open(p2, "w", encoding="utf-8", newline="\n").write(s2[:a] + "\n".join(out) + s2[b:])
 print(f"ft/README: {len(F['steps'])} steps, {len(F['params'])} parameters, {len(F['refs'])} references")
+
+# ---- Signal & Power Integrity Lab (si/)
+js = "global.window={}; require('./si/sources.js'); process.stdout.write(JSON.stringify(window.SI_SOURCES))"
+I = json.loads(subprocess.check_output(["node", "-e", js], cwd=HERE).decode("utf-8"))
+out = ["<!-- refs:start -->", "## 參數依據與參考來源", "", I["intro"], "", "### 用到的公式", ""]
+out += [f"{i}. **{x['zh']}**：{x['d']} {cite(x['r'])}" for i, x in enumerate(I["steps"], 1)]
+out += ["", "### 可調參數對照", "", "| 參數 | 這一頁用的值 | 公開資料 | 來源 |", "|---|---|---|---|"]
+out += [f"| {x['p']} | {x['sim']} | {x['real']} | {cite(x['r'])} |" for x in I["params"]]
+out += ["", I["left"], "", "### 參考文獻", ""]
+out += [f"{i}. [{x['t']}]({x['u']})" for i, x in enumerate(I["refs"], 1)]
+out += ["<!-- refs:end -->"]
+p3 = os.path.join(HERE, "si", "README.md")
+s3 = open(p3, encoding="utf-8").read()
+a, b = s3.index("<!-- refs:start -->"), s3.index("<!-- refs:end -->") + len("<!-- refs:end -->")
+open(p3, "w", encoding="utf-8", newline="\n").write(s3[:a] + "\n".join(out) + s3[b:])
+print(f"si/README: {len(I['steps'])} formulas, {len(I['params'])} parameters, {len(I['refs'])} references")
 print(f"README: {len(S['steps'])} steps, {len(S['params'])} parameters, {len(S['game'])} game rows, {len(S['refs'])} references")

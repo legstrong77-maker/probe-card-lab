@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal &amp; Power Integrity Lab · 訊號與電源完整性</title>
+<meta name="description" content="測試板上的一條高速訊號和一條大電流電源：調整殘樁、板材、電容，看眼圖和電壓怎麼變。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070b; --panel:#0a0e15; --card:#0e131c; --line:#1b2330; --line2:#273142;
+  --text:#e8edf4; --muted:#8d98aa; --dim:#566174;
+  --accent:#4cc9f0; --dis:#70c883; --red:#ff5d5d; --amber:#ffb224; --green:#48d38a;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:Inter,"Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{overflow:hidden}
+button{font:inherit;color:inherit}
+#app{display:grid;grid-template-columns:minmax(0,1fr) 600px;height:100vh;width:100vw}
+#stage{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 40% 28%,#0d1522 0%,#05070b 62%)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.brand{position:absolute;left:28px;top:24px;z-index:1}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:2.2px;color:var(--accent);text-transform:uppercase}
+.brand h1{margin:9px 0 5px;font-size:31px;font-weight:900;letter-spacing:1px}
+.brand p{margin:0;color:var(--muted);font-size:13.5px}
+.tabs{display:flex;gap:6px;margin-top:14px}
+.tab{border:1px solid var(--line2);background:rgba(12,18,28,.85);border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tab small{font-weight:500;color:var(--muted);margin-left:6px}
+.tab.on{background:rgba(76,201,240,.16);border-color:var(--accent);color:#d2f3ff}
+#verdict{position:absolute;left:28px;right:28px;bottom:22px;padding:11px 15px;border-radius:10px;border:1px solid var(--line2);background:rgba(8,11,17,.86);font-size:14.5px;line-height:1.55;font-weight:600}
+#verdict small{display:block;font-weight:500;color:var(--muted);font-size:12px;margin-top:2px}
+#verdict.bad{border-color:rgba(255,93,93,.6);background:rgba(42,10,13,.88)}
+#verdict.warn{border-color:rgba(255,178,36,.6);background:rgba(44,30,6,.88)}
+#verdict.ok{border-color:rgba(72,211,138,.55);background:rgba(8,36,24,.88)}
+#caption{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);width:92%;text-align:center;pointer-events:none;opacity:0}
+#caption .zh{display:block;font-size:30px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 20px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
+#caption .en{display:block;margin-top:7px;font-size:16px;color:#bcc6d4;font-weight:500;text-shadow:0 2px 12px rgba(0,0,0,.95)}
+#endcard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(4,6,10,.9);opacity:0;pointer-events:none;text-align:center;padding:24px}
+#endcard .big{font-size:42px;font-weight:900;letter-spacing:1px}
+#endcard .en{font-size:20px;color:#c3ccd9}
+#endcard .by{margin-top:18px;font:600 13px var(--mono);letter-spacing:2px;color:var(--accent)}
+#endcard .hint{font-size:13px;color:var(--muted)}
+#cursor{position:fixed;left:0;top:0;width:28px;height:28px;pointer-events:none;z-index:50;opacity:0;transform:translate(-200px,-200px)}
+#ripple{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid #fff;pointer-events:none;z-index:49;opacity:0}
+
+#panel{background:var(--panel);border-left:1px solid var(--line);padding:16px 20px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+#panel>*{flex-shrink:0}
+.mode{display:none;flex-direction:column;gap:10px}
+.mode.on{display:flex}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sec-head .r{font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
+.sec-head .eyebrow{white-space:nowrap}
+.sec-head .r b{color:var(--text)}
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.plots canvas{width:100%;height:204px;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
+.plots .sec-head{margin-bottom:5px}
+.kv{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.kv>div{padding:7px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.kv>div:nth-child(odd){border-right:1px solid var(--line)}
+.kv>div:nth-last-child(-n+2){border-bottom:0}
+.kv span{font-size:12px;color:var(--muted)}
+.kv span small{display:block;font-size:10.5px;color:var(--dim)}
+.kv b{font:700 13.5px var(--mono);white-space:nowrap}
+.good{color:var(--green)} .mid{color:var(--amber)} .bad{color:var(--red)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
+.ctl{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:4px}
+.ctl>span{font-size:12.5px;font-weight:600;white-space:nowrap}
+.ctl>span small{color:var(--muted);font-weight:500;margin-left:5px}
+.ctl output{font:600 12.5px var(--mono);color:var(--accent);white-space:nowrap}
+.ctl input,.ctl .seg{grid-column:1/-1}
+.full{grid-column:1/-1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) 0 var(--p,0%),#1f2733 var(--p,0%) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(76,201,240,.12)}
+input[type=range].grab::-webkit-slider-thumb{box-shadow:0 0 0 9px rgba(76,201,240,.28)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:#1f2733}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent)}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button,.tog,.btn{border:1px solid var(--line2);background:#101722;border-radius:7px;padding:7px 9px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;color:inherit;text-align:center}
+.seg button{flex:1}
+.seg button small{display:block;font:500 10px var(--mono);color:var(--muted);margin-top:1px}
+.seg button.on,.tog.on{background:rgba(76,201,240,.15);border-color:var(--accent);color:#d2f3ff}
+.btn.primary{background:rgba(112,200,131,.14);border-color:var(--dis);color:#d6f5dd}
+.press{transform:scale(.94);filter:brightness(1.5)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row .tog,.row .btn{flex:1}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:9px}
+.foot b{color:var(--text)} .foot .dis{color:var(--dis);font-weight:700} .foot a{color:#8fd8f5}
+
+#refs{position:fixed;inset:0;z-index:60;background:rgba(3,5,9,.8);display:none;align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
+#refs.open{display:flex}
+#refs .box{max-width:1000px;width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:22px 24px 26px;box-shadow:0 20px 80px rgba(0,0,0,.6)}
+#refs h2{margin:0 0 6px;font-size:22px;font-weight:800}
+#refs h3{margin:24px 0 10px;font:600 12px var(--mono);letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+#refs p{color:var(--muted);font-size:13px;line-height:1.6;margin:0}
+#refs .x{float:right;margin:-4px -6px 0 12px}
+#refs .tbl{overflow-x:auto}
+#refs table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.5;min-width:640px}
+#refs th,#refs td{border-bottom:1px solid var(--line);padding:8px 10px 8px 0;text-align:left;vertical-align:top}
+#refs th{color:var(--dim);font:600 11px var(--mono);letter-spacing:1px}
+#refs td:first-child{font-weight:700;white-space:nowrap;color:var(--text)}
+#refs td.real{color:#c9d2de} #refs td.sim{color:var(--muted)}
+#refs ol{margin:0;padding-left:26px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+#refs ol.steps li{margin-bottom:6px} #refs ol.steps b{color:var(--text)}
+#refs a{color:#8fd8f5;text-decoration:none} #refs a:hover{text-decoration:underline}
+#refs .c{font:600 10.5px var(--mono);white-space:nowrap} #refs .c a{margin-left:3px}
+html.rec *{transition:none!important;animation:none!important}
+
+@media (max-width:1100px){
+  body{overflow:auto}
+  #app{display:block;height:auto}
+  #stage{height:64vh;height:64svh;min-height:380px}
+  #panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .brand{left:16px;top:14px} .brand h1{font-size:22px} .brand p{display:none}
+  #verdict{left:12px;right:12px;bottom:12px;font-size:13px}
+  #caption{bottom:96px} #caption .zh{font-size:22px} #caption .en{font-size:13px}
+  #cursor,#ripple{display:none}
+}
+@media (max-width:560px){
+  #stage{height:66vh;height:66svh}
+  #panel{padding:14px 14px}
+  .controls{grid-template-columns:1fr;gap:12px}
+  .plots{grid-template-columns:1fr}
+  .eyebrow{font-size:9.5px;letter-spacing:1.6px}
+  .brand h1{font-size:19px;margin:6px 0 0}
+  .tabs{margin-top:9px}.tab{padding:7px 11px;font-size:12px}.tab small{display:none}
+  #verdict{font-size:12px;padding:8px 10px} #verdict small{font-size:10.5px}
+  #caption{bottom:84px;width:96%} #caption .zh{font-size:16px;letter-spacing:.3px} #caption .en{font-size:11px;margin-top:4px}
+  #endcard .big{font-size:23px} #endcard .en{font-size:14px} #endcard .by{font-size:10px}
+  #refs{padding:0}#refs .box{border-radius:0;padding:18px 14px 28px}#refs td:first-child{white-space:normal}
+}
+@media (pointer:coarse){
+  input[type=range]{height:32px}
+  input[type=range]::-webkit-slider-thumb{width:26px;height:26px;margin-top:-10px}
+  .seg button,.tog,.btn{padding:10px 10px;font-size:13px}
+}
+</style>
+<script src="narration.js"></script>
+<script src="sources.js"></script>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div class="brand">
+      <div class="eyebrow">Signal &amp; Power Integrity Lab · Test Boards</div>
+      <h1>訊號與電源完整性實驗室</h1>
+      <p>One fast lane and one big power rail through a thick test board.</p>
+      <div class="tabs">
+        <button class="tab on" id="tabSig" data-mode="sig">訊號<small>Signal integrity</small></button>
+        <button class="tab" id="tabPwr" data-mode="pwr">電源<small>Power integrity</small></button>
+      </div>
+    </div>
+    <div id="caption"><span class="zh"></span><span class="en"></span></div>
+    <div id="verdict"></div>
+    <div id="endcard">
+      <div class="big">訊號要走得乾淨，電要送得穩</div>
+      <div class="en">A clean path for the signal, a stiff rail for the power — that is what the board is for.</div>
+      <div class="by">BUILT WITH CLAUDE OPUS 5.5 · RUNS LIVE IN THE BROWSER</div>
+      <div class="hint" id="endHint"></div>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <!-- ================= signal ================= -->
+    <div class="mode on" id="mSig">
+      <div class="plots">
+        <div><div class="sec-head"><span class="eyebrow">插入損耗 Loss</span><span class="r"><b id="oLoss">—</b></span></div><canvas id="s21"></canvas></div>
+        <div><div class="sec-head"><span class="eyebrow">眼圖 Eye</span><span class="r"><b id="oEye">—</b></span></div><canvas id="eye"></canvas></div>
+      </div>
+      <div class="kv">
+        <div><span>Nyquist<small>奈奎斯特頻率</small></span><b id="kNyq">—</b></div>
+        <div><span>Loss at Nyquist<small>該頻率的損耗</small></span><b id="kLoss">—</b></div>
+        <div><span>Stub, tester side<small>測試機側殘樁 · 共振</small></span><b id="kS1">—</b></div>
+        <div><span>Stub, device side<small>晶片側殘樁 · 共振</small></span><b id="kS2">—</b></div>
+        <div><span>Eye height<small>眼高（占全擺幅）</small></span><b id="kEh">—</b></div>
+        <div><span>Eye width<small>眼寬</small></span><b id="kEw">—</b></div>
+      </div>
+      <div class="controls">
+        <div class="ctl full"><span>Data rate<small>訊號速率</small></span><output id="rateOut"></output><div class="seg" id="segRate"></div></div>
+        <div class="ctl full"><span>Laminate<small>板材</small></span><output id="matOut"></output><div class="seg" id="segMat"></div></div>
+        <label class="ctl"><span>Board thickness<small>板厚</small></span><output id="thOut"></output><input id="th" type="range" min="20" max="80" step="1" value="64"></label>
+        <label class="ctl"><span>Signal layer<small>走線層的深度</small></span><output id="depthOut"></output><input id="depth" type="range" min="8" max="92" step="1" value="30"></label>
+        <label class="ctl"><span>Trace length<small>走線長度</small></span><output id="lenOut"></output><input id="len" type="range" min="2" max="50" step="1" value="25"></label>
+        <label class="ctl"><span>Trace width<small>線寬</small></span><output id="wOut"></output><input id="w" type="range" min="4" max="20" step="1" value="6"></label>
+        <div class="row full"><button id="tD1" class="tog">Back-drill tester via 背鑽測試機側</button><button id="tD2" class="tog">Back-drill device via 背鑽晶片側</button></div>
+        <div class="row full"><button id="tRough" class="tog">Rough copper 粗糙銅面</button><button id="tEq" class="tog">Receiver EQ 接收端等化</button></div>
+      </div>
+    </div>
+    <!-- ================= power ================= -->
+    <div class="mode" id="mPwr">
+      <div class="plots">
+        <div><div class="sec-head"><span class="eyebrow">電源阻抗 |Z|</span><span class="r"><b id="oZ">—</b></span></div><canvas id="zplot"></canvas></div>
+        <div><div class="sec-head"><span class="eyebrow">電壓下陷 Droop</span><span class="r"><b id="oDroop">—</b></span></div><canvas id="droop"></canvas></div>
+      </div>
+      <div class="kv">
+        <div><span>Target impedance<small>目標阻抗</small></span><b id="kZt">—</b></div>
+        <div><span>Worst impedance<small>最大阻抗 · 頻率</small></span><b id="kZmax">—</b></div>
+        <div><span>Worst droop<small>最大壓降 · 占電壓</small></span><b id="kDroop">—</b></div>
+        <div><span>Allowed ripple<small>容許的漣波</small></span><b id="kRip">—</b></div>
+        <div><span>DC drop in the path<small>路徑上的直流壓降</small></span><b id="kDc">—</b></div>
+        <div><span>Heat in the board<small>板上的發熱 · 占晶片功率</small></span><b id="kW">—</b></div>
+      </div>
+      <div class="controls">
+        <div class="ctl"><span>Rail voltage<small>電壓</small></span><output id="vddOut"></output><div class="seg" id="segVdd"><button data-v="1">1.0 V</button><button data-v="0.8" class="on">0.8 V</button><button data-v="0.6">0.6 V</button></div></div>
+        <div class="ctl"><span>Allowed ripple<small>容許漣波</small></span><output id="ripOut"></output><div class="seg" id="segRip"><button data-v="2">±2%</button><button data-v="3" class="on">±3%</button><button data-v="5">±5%</button></div></div>
+        <label class="ctl"><span>Max current<small>最大電流</small></span><output id="imaxOut"></output><input id="imax" type="range" min="0" max="100" step="1" value="53"></label>
+        <label class="ctl"><span>Step rise time<small>電流上升時間</small></span><output id="riseOut"></output><input id="rise" type="range" min="0" max="100" step="1" value="50"></label>
+        <label class="ctl"><span>Bulk capacitors<small>大電容 470 μF</small></span><output id="bulkOut"></output><input id="bulk" type="range" min="0" max="200" step="2" value="20"></label>
+        <label class="ctl"><span>Mid capacitors<small>中電容 47 μF</small></span><output id="midOut"></output><input id="mid" type="range" min="0" max="400" step="4" value="40"></label>
+        <label class="ctl"><span>HF capacitors<small>高頻電容 0.47 μF</small></span><output id="hfOut"></output><input id="hf" type="range" min="0" max="1000" step="10" value="100"></label>
+        <label class="ctl"><span>Power pin pairs<small>電源接腳對數</small></span><output id="pinsOut"></output><input id="pins" type="range" min="0" max="100" step="1" value="46"></label>
+        <label class="ctl"><span>Power plane pairs<small>電源層對數（2 oz）</small></span><output id="planesOut"></output><input id="planes" type="range" min="1" max="24" step="1" value="6"></label>
+        <div class="ctl"><span>Remote sense<small>遠端感測</small></span><output id="senseOut"></output><div class="seg" id="segSense"><button data-v="0">無</button><button data-v="1">板上</button><button data-v="2" class="on">晶片端</button></div></div>
+      </div>
+    </div>
+    <div class="row"><button id="tour" class="btn primary">▶ Guided tour 導覽</button><button id="refsBtn" class="btn">參數依據 Sources</button></div>
+    <div class="row"><a class="btn" href="../">← 探針卡 Probe card</a><a class="btn" href="../ft/">成品測試板 FT board</a><a class="btn" href="../game/">🎮 遊戲 Game</a></div>
+    <div class="foot" id="foot"></div>
+  </aside>
+</div>
+<div id="refs"><div class="box" id="refsBox"></div></div>
+<svg id="cursor" viewBox="0 0 28 28"><path d="M4 2 L4 22 L9.2 17.4 L12.6 25 L16 23.5 L12.7 16.1 L19.6 16.1 Z" fill="#fff" stroke="#0b0f16" stroke-width="1.6" stroke-linejoin="round"/></svg>
+<div id="ripple"></div>
+<script type="module" src="main.js"></script>
+</body>
+</html>
