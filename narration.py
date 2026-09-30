@@ -3,8 +3,8 @@
   python narration.py tts   # synthesize lines, retime the tour, write narration.js / narration.json
   python narration.py mix   # mux narration into build/silent.mp4 -> probe-card-lab.mp4
 
-Voice: Gemini 3.8 Flash TTS (voice Kore). Each line gets two takes; local faster-whisper transcribes
-them and the take closest to the script wins (retakes up to four if whisper hears a misread). The API key comes
+Voice: Gemini 3.8 Flash TTS (voice Kore). Each line gets one take; local faster-whisper transcribes it,
+and if it hears a misread the line is retaken (up to four) and the take closest to the script wins. The API key comes
 from GEMINI_API_KEY or a `.env` file in this folder or any parent — it is never stored in the repo.
 If the free key runs out of its daily quota and GEMINI_API_KEY_PAID (a key from a billed project) is set,
 the run switches to it and prints what it cost. Set NARR_ENGINE=edge to fall back to edge-tts.
