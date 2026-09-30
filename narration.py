@@ -39,7 +39,7 @@ LINES = [
     dict(zh="補強板、主板、MLO 載板、板背支撐，這四層是 DIS 做的。", en="Stiffener, main PCB, MLO substrate, backer — the four layers DIS builds."),
     dict(at=9.8, ins=8.9, zh="追一條訊號：測試機、主板、MLO 載板，", en="Follow one signal: tester, main PCB, MLO substrate,"),
     dict(zh="最後從探針落到晶粒上。", en="and finally down a probe onto the die."),
-    dict(at=13.4, ins=12.5, zh="推高步進速度，晶圓圖一下子就填滿了。", en="Push the index rate and the wafer map fills right in."),
+    dict(at=13.4, ins=12.5, zh="時間快轉十倍，晶圓圖一下子就填滿了。", en="Fast-forward ten times and the wafer map fills right in."),
     dict(at=19.8, ins=19.8, zh="剖開探針頭：兩片導板中間，夾著一排排垂直探針。", en="Cut the probe head open: rows of vertical probes between two guide plates."),
     dict(at=24.1, ins=23.4, zh="時間放慢十倍。", en="Slow time down ten times."),
     dict(zh="載台頂上來，針尖碰到鋁墊還要再壓，這叫過驅量；", en="The chuck rises; after touching the pad it keeps pushing — that's overdrive."),

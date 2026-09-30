@@ -119,7 +119,7 @@ input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:#1f2
 input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent)}
 #od::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--accent) 0 var(--p,0%),#1f2733 var(--p,0%) 65%,#3b1a1e 65% 100%)}
-#warp::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--accent) 0 var(--p,0%),#1f2733 var(--p,0%) 40%,#3b2a12 40% 100%)}
+#warp::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--accent) 0 var(--p,0%),#1f2733 var(--p,0%) 25%,#3b2a12 25% 100%)}
 .seg{display:flex;gap:4px}
 .seg button,.tog,.btn{border:1px solid var(--line2);background:#101722;border-radius:7px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
 .seg button{flex:1}
@@ -133,6 +133,28 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .foot b{color:var(--text)}
 .foot .dis{color:var(--dis);font-weight:700}
 
+.foot a{color:#8fd8f5}
+#refs{position:fixed;inset:0;z-index:60;background:rgba(3,5,9,.8);display:none;align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
+#refs.open{display:flex}
+#refs .box{max-width:1000px;width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:22px 24px 26px;box-shadow:0 20px 80px rgba(0,0,0,.6)}
+#refs h2{margin:0 0 6px;font-size:22px;font-weight:800}
+#refs h3{margin:24px 0 10px;font:600 12px var(--mono);letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+#refs p{color:var(--muted);font-size:13px;line-height:1.6;margin:0}
+#refs .x{float:right;margin:-4px -6px 0 12px}
+#refs .tbl{overflow-x:auto}
+#refs table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.5;min-width:640px}
+#refs th,#refs td{border-bottom:1px solid var(--line);padding:8px 10px 8px 0;text-align:left;vertical-align:top}
+#refs th{color:var(--dim);font:600 11px var(--mono);letter-spacing:1px}
+#refs td:first-child{font-weight:700;white-space:nowrap;color:var(--text)}
+#refs td.real{color:#c9d2de}
+#refs td.sim{color:var(--muted)}
+#refs ol{margin:0;padding-left:26px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+#refs ol.steps li{margin-bottom:6px} #refs ol.steps b{color:var(--text)}
+#refs a{color:#8fd8f5;text-decoration:none} #refs a:hover{text-decoration:underline}
+#refs .c{font:600 10.5px var(--mono);white-space:nowrap}
+#refs .c a{margin-left:3px}
+#refs li:target{background:rgba(76,201,240,.12);border-radius:4px}
+@media (max-width:560px){#refs{padding:0}#refs .box{border-radius:0;padding:18px 14px 28px}#refs td:first-child{white-space:normal}}
 html.rec *{transition:none!important;animation:none!important}
 html.rec #gl{cursor:default}
 
@@ -182,6 +204,7 @@ html.rec #gl{cursor:default}
 } }
 </script>
 <script src="narration.js"></script>
+<script src="sources.js"></script>
 </head>
 <body>
 <div id="app">
@@ -200,7 +223,8 @@ html.rec #gl{cursor:default}
       <div class="stat">TOUCHDOWNS <b id="stTd">0</b></div>
       <div class="stat">DIES TESTED <b id="stDies">0</b></div>
       <div class="stat">YIELD <b id="stYield">—</b></div>
-      <div class="stat">INDEX RATE <b id="stRate">90 TD/min</b></div>
+      <div class="stat">RATE <b id="stRate">27 TD/min</b></div>
+      <div class="stat">SINCE CLEAN <b id="stClean">0 / 100</b></div>
     </div>
     <div id="speed"></div>
     <div id="toasts"></div>
@@ -224,11 +248,11 @@ html.rec #gl{cursor:default}
     <div class="sec-head" id="hScope"><span class="eyebrow">Microscope · 針尖顯微（同一過驅量）</span><span class="r">chuck Z <b id="zNow">0</b> μm</span></div>
     <canvas id="scope"></canvas>
     <div class="cmp">
-      <div class="k"></div><div class="h c">CANTILEVER<small>懸臂式 · 環氧環</small></div><div class="h v">VERTICAL<small>垂直式 · 導板</small></div>
+      <div class="k"></div><div class="h c">CANTILEVER<small>懸臂式 · 環氧環</small></div><div class="h v">VERTICAL<small>垂直式 · 挫曲針</small></div>
       <div class="k">Force / pin<small>單針針壓</small></div><div id="fC">—</div><div id="fV">—</div>
       <div class="k">Scrub length<small>針痕長度</small></div><div id="sC">—</div><div id="sV">—</div>
       <div class="k">CRES<small>接觸電阻</small></div><div id="rC">—</div><div id="rV">—</div>
-      <div class="k">Stress<small>應力 / 降伏</small></div><div><span id="pC">0%</span><span class="bar"><i id="bC"></i></span></div><div><span id="pV">0%</span><span class="bar"><i id="bV"></i></span></div>
+      <div class="k">Stress<small>應力 / 過載上限</small></div><div><span id="pC">0%</span><span class="bar"><i id="bC"></i></span></div><div><span id="pV">0%</span><span class="bar"><i id="bV"></i></span></div>
     </div>
     <div class="sec-head" id="hChart"><span class="eyebrow">Force vs overdrive · 針壓曲線</span><span class="r">simplified model</span></div>
     <canvas id="chart"></canvas>
@@ -236,16 +260,17 @@ html.rec #gl{cursor:default}
     <div class="controls">
       <label class="ctl"><span>Overdrive<small>過驅量</small></span><output id="odOut">75 μm</output><input id="od" type="range" min="0" max="200" step="1" value="75"></label>
       <label class="ctl"><span>MLO flatness<small>平整度</small></span><output id="warpOut">0 μm</output><input id="warp" type="range" min="0" max="100" step="1" value="0"></label>
-      <label class="ctl"><span>Index rate<small>步進速度</small></span><output id="rateOut">90 TD/min</output><input id="rate" type="range" min="20" max="600" step="1" value="90"></label>
+      <label class="ctl"><span>Test time<small>測試時間</small></span><output id="testOut">1.5 s</output><input id="test" type="range" min="0" max="100" step="1" value="35"></label>
       <label class="ctl"><span>Explode<small>拆解</small></span><output id="exOut">0%</output><input id="explode" type="range" min="0" max="100" step="1" value="0"></label>
       <div class="ctl full"><span>Time<small>時間</small></span><output id="tsOut">1×</output>
-        <div class="seg"><button data-ts="1" class="on">1×</button><button data-ts="0.1">1/10×</button><button data-ts="0">❚❚ Freeze</button></div></div>
+        <div class="seg"><button data-ts="0.1">1/10×</button><button data-ts="1" class="on">1×</button><button data-ts="10">10×</button><button data-ts="60">60×</button><button data-ts="0">❚❚</button></div></div>
       <div class="row full"><button id="tCut" class="tog">Cut open 剖開</button><button id="tTrace" class="tog">Trace signal 訊號路徑</button><button id="tLabels" class="tog on">Labels 標籤</button></div>
-      <div class="row full"><button id="tour" class="btn primary">▶ Guided tour 導覽</button><button id="replace" class="btn">Replace probes 換針</button></div>
+      <div class="row full"><button id="tour" class="btn primary">▶ Guided tour 導覽</button><button id="replace" class="btn">Replace probes 換針</button><button id="refsBtn" class="btn">參數依據 Sources</button></div>
     </div>
     <div class="foot" id="foot"></div>
   </aside>
 </div>
+<div id="refs"><div class="box" id="refsBox"></div></div>
 <svg id="cursor" viewBox="0 0 28 28"><path d="M4 2 L4 22 L9.2 17.4 L12.6 25 L16 23.5 L12.7 16.1 L19.6 16.1 Z" fill="#fff" stroke="#0b0f16" stroke-width="1.6" stroke-linejoin="round"/></svg>
 <div id="ripple"></div>
 
@@ -267,15 +292,29 @@ function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>
 function hash(i) { let x = Math.imul(i ^ 0x9e3779b9, 2654435761) >>> 0; x ^= x >>> 16; x = Math.imul(x, 0x45d9f3b) >>> 0; x ^= x >>> 16; return (x >>> 0) / 4294967296; }
 
 /* ============================================================
-   Physical model (simplified, schematic numbers)
+   Physical model — simplified; every number and its source is listed in the 參數依據 panel
    ============================================================ */
-const GAP = 110;          // μm chuck separation while indexing
+const GAP = 200;          // μm chuck separation while indexing (stepping specs use 200–300 μm)
 const PAD = 60;           // μm Al pad width
+// motion per touchdown ≈ 0.7 s (typical prober index time): XY step, Z up to contact, overdrive, release
+const MOVE = { idx: 0.35, up: 0.15, od: 0.08, rel: 0.12 };
+const MOVE_T = MOVE.idx + MOVE.up + MOVE.od + MOVE.rel;
 const TYPES = {
-  cant: { force: (od) => 0.06 * od, scrub: (od) => 0.45 * od, start: 12, yieldOD: 130, color: '#ff9f45' },
-  vert: { force: (od) => 4.2 * Math.tanh(od / 28) + 0.008 * od, scrub: (od) => 0.12 * od, start: 22, yieldOD: 170, color: '#b69cff' },
+  // W/ReW cantilever: ~1.5 gf/mil, linear; tip slides ~0.22×OD; tip damage beyond ~125 μm OD
+  cant: { force: (od) => 0.06 * od, slide: (od) => 0.22 * od, contact: 6, start: 29, limitOD: 125, color: '#ff9f45' },
+  // Cobra-type buckling beam: force rises then levels off (~4.5 gf at 75 μm); the mark is mostly the tip footprint
+  vert: { force: (od) => 4.2 * Math.tanh(od / 45) + 0.008 * od, slide: (od) => 0.05 * od, contact: 10, start: 25, limitOD: 170, color: '#b69cff' },
 };
-function cres(F, scrub) { const e = F * (1 + scrub / 20); return 100 + 3000 * Math.exp(-e / 2.5); }
+const CLEAN_EVERY = 100;  // online probe cleaning interval (touchdowns)
+// contact resistance: film breaks with force and a little scrub; tips slowly pick up debris between cleanings
+function cres(F, slide) { const e = F * (1 + slide / 30); return 80 + 2500 * Math.exp(-e / 1.6) + 0.8 * sim.sinceClean; }
+function testFromSlider(v) { return 0.2 * Math.pow(300, v / 100); }              // 0.2 s … 60 s, log scale
+function sliderFromTest(t) { return Math.round(100 * Math.log(t / 0.2) / Math.log(300)); }
+function cycleT() { return MOVE_T + S.test; }
+function phaseEdges() {
+  const T = cycleT(); let a = 0;
+  return [0, a += MOVE.idx / T, a += MOVE.up / T, a += MOVE.od / T, a += S.test / T, 1];
+}
 
 /* ============================================================
    Geometry layout (world units; probe head exaggerated)
@@ -329,14 +368,14 @@ const VALID_DIES = valid.reduce((a, b) => a + b, 0);
 /* ============================================================
    State
    ============================================================ */
-const S = { od: 75, warp: 0, rate: 90, ts: 1, tsCur: 1, explode: 0, cut: false, trace: false, labels: true };
+const S = { od: 75, warp: 0, test: 1.5, ts: 1, tsCur: 1, explode: 0, cut: false, trace: false, labels: true };
 let exS = 0, cutT = 0, traceT = 0, labelT = 1, dmgT = 0;
 const sim = {
   cyc: 0, k: 0, p: 0, z: -GAP, phase: 0, phaseU: 0, indexQ: 1, wx: 0, wz: 0,
   wafer: 1, td: 0, tested: 0, passed: 0, res: new Int8Array(N * N),
   dmg: { cant: false, vert: false }, flags: {},
   mark: { cant: 0, vert: 0 }, prevMark: { cant: 0, vert: 0 },
-  pc: null, pv: null, edgeOD: 0,
+  pc: null, pv: null, edgeOD: 0, sinceClean: 0, cleans: 0,
 };
 let wallT = 0, simClock = 0;
 
@@ -346,17 +385,17 @@ function probeState(type, z) {
   const od = Math.max(0, z - off);
   let F = od > 0 ? T.force(od) : 0;
   if (type === 'vert' && sim.dmg.vert) F *= 0.62;               // plastic set: preload lost
-  const scrub = od > 0 ? T.scrub(od) : 0;
-  return { od, F, scrub, R: od > 0 ? cres(F, scrub) : Infinity, stress: od / T.yieldOD, breach: od > 0 && T.start + scrub + 5 > PAD, off };
+  const slide = od > 0 ? T.slide(od) : 0;
+  const scrub = od > 0 ? slide + T.contact : 0;                   // mark length = tip slide + contact size
+  return { od, F, slide, scrub, R: od > 0 ? cres(F, slide) : Infinity, stress: od / T.limitOD, breach: od > 0 && T.start + scrub > PAD, off };
 }
-function zAt(p, od) {
-  if (p < 0.28) return -GAP;
-  if (p < 0.42) return -GAP + GAP * easeOut((p - 0.28) / 0.14);
-  if (p < 0.52) return od * ease((p - 0.42) / 0.10);
-  if (p < 0.80) return od;
-  return od + (-GAP - od) * ease((p - 0.80) / 0.20);
+function zAt(p, od, E) {
+  if (p < E[1]) return -GAP;
+  if (p < E[2]) return -GAP + GAP * easeOut((p - E[1]) / (E[2] - E[1]));
+  if (p < E[3]) return od * ease((p - E[2]) / (E[3] - E[2]));
+  if (p < E[4]) return od;
+  return od + (-GAP - od) * ease((p - E[4]) / (E[5] - E[4]));
 }
-const PH_EDGES = [0, 0.28, 0.42, 0.52, 0.80, 1];
 
 function failProb(dieIdx) {
   const i = dieIdx % N, j = (dieIdx / N) | 0;
@@ -381,14 +420,19 @@ function onNewCycle(k) {
   const L = sites.length;
   sim.prevMark.cant = sim.mark.cant; sim.prevMark.vert = sim.mark.vert;
   sim.mark.cant = sim.mark.vert = 0;
+  if (++sim.sinceClean >= CLEAN_EVERY) {
+    sim.sinceClean = 0; sim.cleans++;
+    toast('🧽 線上清針', `Online probe cleaning every ${CLEAN_EVERY} touchdowns — contact resistance back to baseline`, 'ok');
+  }
   if (k % L === 0 && k > 0) {           // next wafer
     sim.wafer = k / L + 1; sim.res.fill(0); sim.tested = 0; sim.passed = 0; clearResults();
   }
 }
 function simAdvance(newCyc) {
   let c = sim.cyc;
+  const E4 = phaseEdges()[4];
   for (let guard = 0; guard < 10000; guard++) {
-    const k = Math.floor(c), evTest = k + 0.80, evNext = k + 1;
+    const k = Math.floor(c), evTest = k + E4, evNext = k + 1;
     if (c < evTest && newCyc >= evTest) { recordSite(k); c = evTest; continue; }
     if (newCyc >= evNext) { c = evNext; onNewCycle(k + 1); continue; }
     break;
@@ -399,20 +443,21 @@ function kinematics() {
   const k = Math.floor(sim.cyc), p = sim.cyc - k, L = sites.length;
   sim.k = k; sim.p = p; sim.td = k;
   const cur = sites[((k % L) + L) % L], prev = sites[(((k - 1) % L) + L) % L];
-  const q = p < 0.28 ? ease5(p / 0.28) : 1;
-  sim.indexQ = p < 0.28 ? p / 0.28 : 1;
+  const E = phaseEdges();
+  const q = p < E[1] ? ease5(p / E[1]) : 1;
+  sim.indexQ = p < E[1] ? p / E[1] : 1;
   sim.wx = -lerp(prev.cx, cur.cx, q); sim.wz = -lerp(prev.cz, cur.cz, q);
-  sim.z = zAt(p, S.od);
-  let ph = 0; while (p >= PH_EDGES[ph + 1]) ph++;
-  sim.phase = ph; sim.phaseU = (p - PH_EDGES[ph]) / (PH_EDGES[ph + 1] - PH_EDGES[ph]);
+  sim.z = zAt(p, S.od, E);
+  let ph = 0; while (ph < 4 && p >= E[ph + 1]) ph++;
+  sim.phase = ph; sim.phaseU = (p - E[ph]) / (E[ph + 1] - E[ph]);
   sim.pc = probeState('cant', sim.z); sim.pv = probeState('vert', sim.z);
   if (sim.pc.od > 0) sim.mark.cant = Math.max(sim.mark.cant, sim.pc.scrub);
   if (sim.pv.od > 0) sim.mark.vert = Math.max(sim.mark.vert, sim.pv.scrub);
   sim.edgeOD = S.od - S.warp;
   // failure events
   if (sim.pc.breach && !sim.flags.breach) { sim.flags.breach = true; toast('⚠ 懸臂針刮出鋁墊邊界', 'Cantilever scrub mark ran off the 60 μm pad', 'warn'); }
-  if (!sim.dmg.cant && sim.pc.od >= TYPES.cant.yieldOD) { sim.dmg.cant = true; toast('✖ 懸臂針塑性變形，失去平整度', 'Cantilever needle bent past yield — it no longer comes back', 'bad'); }
-  if (!sim.dmg.vert && sim.pv.od >= TYPES.vert.yieldOD) { sim.dmg.vert = true; toast('✖ 垂直探針超過降伏應力', 'Vertical probes overstressed — permanent set, force lost', 'bad'); }
+  if (!sim.dmg.cant && sim.pc.od >= TYPES.cant.limitOD) { sim.dmg.cant = true; toast('✖ 懸臂針超過過載上限，塑性變形', 'Cantilever needle pushed past its over-stress limit — it no longer comes back', 'bad'); }
+  if (!sim.dmg.vert && sim.pv.od >= TYPES.vert.limitOD) { sim.dmg.vert = true; toast('✖ 垂直探針超過過載上限', 'Vertical probes over-stressed — permanent set, force lost', 'bad'); }
   const inContactPhase = sim.phase >= 2 && sim.phase <= 3 && sim.z > 5;
   if (inContactPhase && S.warp > 0 && sim.z - S.warp <= 0 && !sim.flags.open) { sim.flags.open = true; toast('⚠ 翹起那一側的探針碰不到晶粒', `MLO warped ${S.warp} μm — probes on the high side are open`, 'warn'); }
   if (sim.z - S.warp > 25 || S.warp === 0) sim.flags.open = false;
@@ -854,8 +899,8 @@ function tracePoints(tr, Y, lift) {
    ============================================================ */
 const LABELS = [
   { id: 'pogo', zh: '彈簧針塔', en: 'Pogo tower', d: 'Tester ↔ card · thousands of spring pins', r: 8.95, y: (Y) => Yc.pcbT + POGO_H / 2 + Y.pogo },
-  { id: 'stiff', zh: '補強板', en: 'Stiffener', d: 'Keeps the whole card flat under the pogo load', r: 6.2, y: (Y) => Yc.pcbT + 0.18 + Y.stiff, dis: true },
-  { id: 'pcb', zh: '探針卡主板', en: 'Probe card PCB', d: 'Dozens of copper layers route every tester channel', r: R_PCB, y: (Y) => (Yc.pcbT + Yc.pcbB) / 2 + Y.pcb, dis: true },
+  { id: 'stiff', zh: '補強板', en: 'Stiffener', d: 'Mechanical frame: keeps the card flat · not in the signal path', r: 6.2, y: (Y) => Yc.pcbT + 0.18 + Y.stiff, dis: true },
+  { id: 'pcb', zh: '探針卡主板', en: 'Probe card PCB', d: 'Dozens of layers (public examples 42–76) route every channel', r: R_PCB, y: (Y) => (Yc.pcbT + Yc.pcbB) / 2 + Y.pcb, dis: true },
   { id: 'mlo', zh: 'MLO 載板', en: 'Space transformer', d: 'Fans fine-pitch bumps out to the PCB’s BGA pitch', r: MLO_H, y: (Y) => 0.96 + Y.mlo, dis: true },
   { id: 'backer', zh: '板背支撐', en: 'Backer', d: 'Guide pins locate the probe head', r: 2.3, y: (Y) => 0.97 + Y.backer, dis: true },
   { id: 'ph', zh: '探針頭 P/H', en: 'Probe head', d: 'Guide plates + 224 vertical probes', r: 1.1, y: (Y) => 0.5 + Y.ug * 0.5, mate: true },
@@ -1025,7 +1070,7 @@ function drawPad(g, cx, surfY, padW, type, mark, XS) {
   g.fillStyle = 'rgba(200,150,90,.35)';
   for (let v = 0; v < 4; v++) g.fillRect(left + 18 + v * (padW - 40) / 3, surfY + 7, 4, 40);
   if (mark > 0.5) {
-    const ms = left + T.start * XS, me = ms + (mark + 5) * XS, end = Math.min(me, left + padW);
+    const ms = left + T.start * XS, me = ms + mark * XS, end = Math.min(me, left + padW);
     g.fillStyle = 'rgba(40,46,56,.95)'; g.fillRect(ms, surfY, end - ms, 2.5);
     g.fillStyle = '#eef2f6'; g.beginPath(); g.moveTo(end - 1, surfY); g.lineTo(end + 5, surfY - 3.5); g.lineTo(end + 9, surfY); g.fill();
     if (me > left + padW) { g.fillStyle = 'rgba(255,80,80,.95)'; g.fillRect(left + padW, surfY - 2, me - left - padW, 4); }
@@ -1037,7 +1082,7 @@ function drawTip(g, x0, w, h, type) {
   const dmg = sim.dmg[type], col = dmg ? '#ff6b6b' : T.color, metal = dmg ? '#e39a9a' : '#c6ced9';
   g.save(); g.beginPath(); g.rect(x0, 0, w, h); g.clip();
   const cx = x0 + w * 0.5 - 4, padW = PAD * XS;
-  const tipRestX = cx - padW / 2 + T.start * XS;
+  const tipRestX = cx - padW / 2 + (T.start + T.contact / 2) * XS;
   const surfY = yC - sim.z * (sim.z > 0 ? YS : 0.42);
   // wafer cross-section: silicon + BEOL metal layers
   g.fillStyle = '#0f1520'; g.fillRect(x0, surfY + 7, w, h);
@@ -1054,7 +1099,7 @@ function drawTip(g, x0, w, h, type) {
     drawPad(g, cx + (1 - q) * slide, surfY, padW, type, 0, XS);
   } else drawPad(g, cx, surfY, padW, type, sim.mark[type], XS);
   const tipY = Math.min(yC - st.off * YS, surfY);
-  const tipX = tipRestX + (st.od > 0 ? st.scrub * XS : 0);
+  const tipX = tipRestX + (st.od > 0 ? st.slide * XS : 0);
   g.lineCap = 'round'; g.lineJoin = 'round';
   if (type === 'cant') {
     const K = { x: tipX - 34 - st.od * 0.05, y: tipY - 112 };
@@ -1100,9 +1145,9 @@ function drawTip(g, x0, w, h, type) {
   g.fillStyle = col; g.font = '700 11px JetBrains Mono, monospace';
   g.fillText(type === 'cant' ? 'CANTILEVER' : 'VERTICAL', x0 + 10, 18);
   g.fillStyle = '#8d98aa'; g.font = '500 11px Inter, "Noto Sans TC", sans-serif';
-  g.fillText(type === 'cant' ? '懸臂式 · 鎢錸針' : '垂直式 · 導板定位', x0 + 10, 34);
+  g.fillText(type === 'cant' ? '懸臂式 · 鎢錸針' : '垂直式 · Cobra 挫曲針', x0 + 10, 34);
   // status pill
-  const msg = dmg ? (type === 'cant' ? 'BENT · tip +24 μm' : 'OVERSTRESSED') : `OD ${st.od.toFixed(0)} μm · scrub ${st.scrub.toFixed(0)} μm`;
+  const msg = dmg ? (type === 'cant' ? 'BENT · tip +24 μm' : 'OVER-STRESSED') : `OD ${st.od.toFixed(0)} μm · mark ${st.scrub.toFixed(0)} μm`;
   g.font = '600 10.5px JetBrains Mono, monospace';
   const mw = g.measureText(msg).width;
   g.fillStyle = 'rgba(7,10,16,.85)'; g.beginPath(); g.roundRect(x0 + 6, h - 26, mw + 14, 19, 5); g.fill();
@@ -1115,9 +1160,9 @@ function drawTip(g, x0, w, h, type) {
   g.fillStyle = '#9aa5b3'; g.fillRect(pxl, pyt, ps, ps);
   const mk = sim.indexQ < 1 ? sim.prevMark[type] : sim.mark[type];
   if (mk > 0.5) {
-    const ms = pxl + T.start * pxs - 4, len = (mk + 8) * pxs, my = pyt + ps / 2;
-    g.fillStyle = '#4a525e'; g.beginPath(); g.roundRect(ms, my - 4, len, 8, 4); g.fill();
-    if (ms + len > pxl + ps) { g.fillStyle = '#ff5d5d'; g.beginPath(); g.roundRect(pxl + ps, my - 4, ms + len - pxl - ps, 8, 3); g.fill(); }
+    const ms = pxl + T.start * pxs, len = mk * pxs, my = pyt + ps / 2, hh = T.contact * pxs / 2;
+    g.fillStyle = '#4a525e'; g.beginPath(); g.roundRect(ms, my - hh, len, 2 * hh, hh); g.fill();
+    if (ms + len > pxl + ps) { g.fillStyle = '#ff5d5d'; g.beginPath(); g.roundRect(pxl + ps, my - hh, ms + len - pxl - ps, 2 * hh, 3); g.fill(); }
   }
   g.restore();
 }
@@ -1135,13 +1180,13 @@ function drawChart() {
   g.fillText('gf', 8, t + 2); g.fillText('OD μm →', l + W - 50, t + H - 5);
   for (const type of ['cant', 'vert']) {
     const T = TYPES[type];
-    g.setLineDash([3, 3]); g.strokeStyle = T.color; g.globalAlpha = 0.6; g.beginPath(); g.moveTo(X(T.yieldOD) + 0.5, t); g.lineTo(X(T.yieldOD) + 0.5, t + H); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    g.setLineDash([3, 3]); g.strokeStyle = T.color; g.globalAlpha = 0.6; g.beginPath(); g.moveTo(X(T.limitOD) + 0.5, t); g.lineTo(X(T.limitOD) + 0.5, t + H); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
     g.strokeStyle = T.color; g.lineWidth = 2; g.beginPath();
     for (let od = 0; od <= 200; od += 2) { const y = Yf(Math.min(12, T.force(od))); od ? g.lineTo(X(od), y) : g.moveTo(X(od), y); }
     g.stroke();
   }
-  g.fillStyle = 'rgba(255,159,69,.85)'; g.fillText('yield', X(130) + 3, t + 22);
-  g.fillStyle = 'rgba(182,156,255,.9)'; g.fillText('yield', X(170) + 3, t + 22);
+  g.fillStyle = 'rgba(255,159,69,.85)'; g.fillText('limit', X(TYPES.cant.limitOD) + 3, t + 22);
+  g.fillStyle = 'rgba(182,156,255,.9)'; g.fillText('limit', X(TYPES.vert.limitOD) + 3, t + 22);
   const z = Math.max(0, sim.z);
   g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 1; g.beginPath(); g.moveTo(X(z) + 0.5, t); g.lineTo(X(z) + 0.5, t + H); g.stroke();
   for (const [st, type] of [[sim.pc, 'cant'], [sim.pv, 'vert']]) { g.fillStyle = TYPES[type].color; g.beginPath(); g.arc(X(z), Yf(Math.min(12, st.F)), 4, 0, Math.PI * 2); g.fill(); }
@@ -1191,17 +1236,18 @@ function updateDOM() {
   setText('stTd', sim.td.toLocaleString('en-US'));
   setText('stDies', `${sim.tested} / ${VALID_DIES}`);
   setText('stYield', sim.tested ? (sim.passed / sim.tested * 100).toFixed(1) + '%' : '—');
-  setText('stRate', S.rate + ' TD/min');
+  setText('stRate', (60 / cycleT()).toFixed(1) + ' TD/min');
+  setText('stClean', `${sim.sinceClean} / ${CLEAN_EVERY}`);
   const sp = $('#speed');
   if (S.ts === 1) sp.style.display = 'none';
-  else { sp.style.display = 'block'; sp.className = S.ts === 0 ? 'pause' : ''; setText('speed', S.ts === 0 ? '❚❚ TIME FROZEN · 時間凍結' : '×0.1 SLOW MOTION · 慢動作'); }
+  else { sp.style.display = 'block'; sp.className = S.ts === 0 ? 'pause' : ''; setText('speed', S.ts === 0 ? '❚❚ TIME FROZEN · 時間凍結' : S.ts < 1 ? '×0.1 SLOW MOTION · 慢動作' : `⏩ ×${S.ts} TIME-LAPSE · 快轉`); }
   const edge = S.od - S.warp;
   const pl = S.warp === 0
     ? `MLO flatness 0 μm · every probe gets the full ${S.od} μm OD`
-    : `MLO warp ${S.warp} μm${S.warp > 40 ? ' · over budget' : ''} · last probe to touch gets OD: ${edge > 0 ? edge.toFixed(0) + ' μm' : 'none → OPEN'}`;
-  setText('planLine', pl, S.warp > 40 || edge <= 15 ? 'bad' : S.warp > 25 ? 'mid' : '');
+    : `MLO warp ${S.warp} μm${S.warp > 25 ? ' (over ~25 μm budget)' : ''} · last probe OD: ${edge > 0 ? edge.toFixed(0) + ' μm' : 'none → OPEN'}`;
+  setText('planLine', pl, S.warp > 25 || edge <= 15 ? 'bad' : S.warp > 15 ? 'mid' : '');
   const F = sim.pv.F || TYPES.vert.force(S.od);
-  const foot = `<b>這張卡：</b>${NP} 支探針 × ${F.toFixed(1)} gf ≈ <b>${(NP * F / 1000).toFixed(1)} kgf</b>；一張 20,000 針的 AI 晶片卡在同樣 OD 下 ≈ <b>${(20000 * F / 1000).toFixed(0)} kgf</b> 壓在載台上。<br><span class="dis">DIS 做的：</span>主板 PCB、MLO 載板、補強板、板背支撐，並完成整卡組裝測試；探針頭由集團或合作夥伴提供。個人作品、示意模型：尺寸放大、物理簡化，數字為業界通用量級，非官方資料。`;
+  const foot = `<b>這張卡：</b>${NP} 支探針 × ${F.toFixed(1)} gf ≈ <b>${(NP * F / 1000).toFixed(1)} kgf</b>。實際 HPC 卡約 2 萬針、每針約 2 gf ≈ 40 kgf；最新 10 萬針以上的卡總針壓達 170–280 kgf，逼近載台約 300 kgf 的上限。 <a href="#" id="refsLink">參數依據與參考來源 →</a><br><span class="dis">DIS 做的：</span>主板 PCB、MLO 載板、補強板、板背支撐，並完成整卡組裝測試；探針頭由集團或合作夥伴提供。個人作品、示意模型：尺寸放大、物理簡化，數字為業界通用量級，非官方資料。`;
   if (txtCache.get('foot') !== foot) { txtCache.set('foot', foot); $('#foot').innerHTML = foot; }
 }
 
@@ -1228,14 +1274,14 @@ function updateToasts() {
 /* ============================================================
    Controls
    ============================================================ */
-const ui = { od: $('#od'), warp: $('#warp'), rate: $('#rate'), explode: $('#explode'), tCut: $('#tCut'), tTrace: $('#tTrace'), tLabels: $('#tLabels'), tour: $('#tour'), replace: $('#replace') };
+const ui = { od: $('#od'), warp: $('#warp'), test: $('#test'), explode: $('#explode'), tCut: $('#tCut'), tTrace: $('#tTrace'), tLabels: $('#tLabels'), tour: $('#tour'), replace: $('#replace') };
 const segBtns = [...document.querySelectorAll('.seg button')];
 function fill(inp) { inp.style.setProperty('--p', ((inp.value - inp.min) / (inp.max - inp.min) * 100) + '%'); }
 ui.od.addEventListener('input', () => { S.od = +ui.od.value; $('#odOut').textContent = S.od + ' μm'; fill(ui.od); });
 ui.warp.addEventListener('input', () => { S.warp = +ui.warp.value; $('#warpOut').textContent = `${S.warp} μm`; fill(ui.warp); });
-ui.rate.addEventListener('input', () => { S.rate = +ui.rate.value; $('#rateOut').textContent = S.rate + ' TD/min'; fill(ui.rate); });
+ui.test.addEventListener('input', () => { S.test = testFromSlider(+ui.test.value); $('#testOut').textContent = `${S.test < 10 ? S.test.toFixed(1) : S.test.toFixed(0)} s · ${(60 / cycleT()).toFixed(1)} TD/min`; fill(ui.test); });
 ui.explode.addEventListener('input', () => { S.explode = ui.explode.value / 100; $('#exOut').textContent = ui.explode.value + '%'; fill(ui.explode); });
-function setTs(ts) { S.ts = ts; segBtns.forEach((b) => b.classList.toggle('on', +b.dataset.ts === ts)); $('#tsOut').textContent = ts === 1 ? '1×' : ts === 0 ? 'frozen' : '0.1×'; }
+function setTs(ts) { S.ts = ts; segBtns.forEach((b) => b.classList.toggle('on', +b.dataset.ts === ts)); $('#tsOut').textContent = ts === 0 ? 'frozen' : ts < 1 ? '0.1×' : ts + '×' + (ts > 1 ? ' time-lapse' : ''); }
 segBtns.forEach((b) => b.addEventListener('click', () => setTs(+b.dataset.ts)));
 ui.tCut.addEventListener('click', () => { S.cut = !S.cut; ui.tCut.classList.toggle('on', S.cut); });
 ui.tTrace.addEventListener('click', () => { S.trace = !S.trace; ui.tTrace.classList.toggle('on', S.trace); });
@@ -1253,7 +1299,7 @@ function setSlider(inp, v) { inp.value = v; inp.dispatchEvent(new Event('input')
 function applyState(o) {
   if ('od' in o) setSlider(ui.od, o.od);
   if ('warp' in o) setSlider(ui.warp, o.warp);
-  if ('rate' in o) setSlider(ui.rate, o.rate);
+  if ('test' in o) setSlider(ui.test, sliderFromTest(o.test));
   if ('explode' in o) setSlider(ui.explode, o.explode * 100);
   if ('ts' in o) setTs(o.ts);
   if ('cut' in o) { S.cut = o.cut; ui.tCut.classList.toggle('on', S.cut); }
@@ -1268,6 +1314,36 @@ canvas.addEventListener('pointermove', (e) => { if (downAt && director.on && !RE
 window.addEventListener('pointerup', () => { downAt = null; });
 canvas.addEventListener('wheel', (e) => { if (director.on && !RECORD) director.stop(); }, { passive: true });
 $('#endcard').addEventListener('click', () => { $('#endcard').style.opacity = 0; $('#endcard').style.pointerEvents = 'none'; });
+
+// 參數依據: every adjustable number next to its real-world range and where that range comes from
+const SRC = window.SOURCES;
+if (SRC) {
+  const cite = (r) => r.length ? `<span class="c">${r.map((n) => `<a href="#ref-${n}">[${n}]</a>`).join('')}</span>` : '';
+  $('#refsBox').innerHTML = `
+    <button class="btn x" id="refsClose">✕ 關閉</button>
+    <h2>參數依據與參考來源</h2>
+    <p>${SRC.intro}</p>
+    <h3>針測流程 · Process</h3>
+    <ol class="steps">${SRC.steps.map((x) => `<li><b>${x.zh}</b>　${x.d} ${cite(x.r)}</li>`).join('')}</ol>
+    <h3>可調參數對照 · Parameters</h3>
+    <div class="tbl"><table><tr><th>參數</th><th>模擬器用的值</th><th>公開資料的典型範圍</th><th>來源</th></tr>
+      ${SRC.params.map((x) => `<tr><td>${x.p}</td><td class="sim">${x.sim}</td><td class="real">${x.real}</td><td>${cite(x.r)}</td></tr>`).join('')}</table></div>
+    <h3>沒有模擬的部分</h3>
+    <p>${SRC.left}</p>
+    <h3>參考文獻 · References</h3>
+    <ol>${SRC.refs.map((x, i) => `<li id="ref-${i + 1}"><a href="${x.u}" target="_blank" rel="noopener">${x.t}</a></li>`).join('')}</ol>`;
+  const openRefs = (e) => { if (e) e.preventDefault(); $('#refs').classList.add('open'); $('#refs').scrollTop = 0; };
+  const closeRefs = () => $('#refs').classList.remove('open');
+  $('#refsBtn').addEventListener('click', openRefs);
+  $('#foot').addEventListener('click', (e) => { if (e.target.id === 'refsLink') openRefs(e); });
+  $('#refsClose').addEventListener('click', closeRefs);
+  $('#refs').addEventListener('click', (e) => { if (e.target.id === 'refs') closeRefs(); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRefs(); });
+  $('#refsBox').addEventListener('click', (e) => {       // in-panel citation jumps without touching the page URL
+    const a = e.target.closest('a[href^="#ref-"]');
+    if (a) { e.preventDefault(); const li = $(a.getAttribute('href')); li.scrollIntoView({ block: 'center' }); li.style.background = 'rgba(76,201,240,.16)'; setTimeout(() => (li.style.background = ''), 1600); }
+  });
+} else $('#refsBtn').style.display = 'none';
 
 /* ============================================================
    Director — the guided tour that is also the video script
@@ -1292,14 +1368,14 @@ const ACTS = [
   { t: 4.2, drag: 'explode', to: 100, d: 2.8 },
   { t: 8.9, move: ['el', '#tTrace'], d: 0.8 },
   { t: 9.8, click: '#tTrace' },
-  { t: 12.5, move: ['slider', 'rate'], d: 0.8 },
-  { t: 13.4, drag: 'rate', to: 480, d: 1.9 },
+  { t: 12.5, move: ['el', '[data-ts="10"]'], d: 0.8 },
+  { t: 13.4, click: '[data-ts="10"]' },
   { t: 18.1, move: ['slider', 'explode'], d: 0.7 },
   { t: 18.9, drag: 'explode', to: 30, d: 1.1 },
   { t: 20.1, move: ['el', '#tCut'], d: 0.5 },
   { t: 20.7, click: '#tCut' },
-  { t: 21.8, move: ['slider', 'rate'], d: 0.6 },
-  { t: 22.5, drag: 'rate', to: 120, d: 0.8 },
+  { t: 21.8, move: ['el', '[data-ts="1"]'], d: 0.6 },
+  { t: 22.5, click: '[data-ts="1"]' },
   { t: 23.4, move: ['el', '[data-ts="0.1"]'], d: 0.6 },
   { t: 24.1, click: '[data-ts="0.1"]' },
   { t: 30.0, move: ['el', '[data-ts="0"]'], d: 0.7 },
@@ -1315,7 +1391,7 @@ const CAPS = [
   { t: 0.3, zh: '晶圓針測：探針卡一格一格點測晶粒', en: 'A probe card sorting a wafer, die by die' },
   { t: 4.2, zh: '把整張探針卡拆開', en: 'Take the whole card apart' },
   { t: 9.8, zh: '追一條訊號：測試機 → 主板 → MLO 載板 → 探針 → 晶粒', en: 'Follow one signal from the tester down to the die' },
-  { t: 13.4, zh: '把步進速度往上推', en: 'Push the index rate' },
+  { t: 13.4, zh: '時間快轉十倍', en: 'Fast-forward time ×10' },
   { t: 20.7, zh: '剖開探針頭', en: 'Cut the probe head open' },
   { t: 24.1, zh: '時間放慢到 1/10，看針尖刮過鋁墊', en: 'Slow time down to 1/10 — watch the tips scrub the pads' },
   { t: 30.8, zh: '凍結時間，讓 MLO 載板翹曲 100 μm', en: 'Freeze time and warp the MLO substrate by 100 μm' },
@@ -1324,9 +1400,10 @@ const CAPS = [
   { t: 38.9, zh: '……直到它壞掉', en: '…until something breaks' },
   { t: 42.0, zh: '', en: '' },
 ];
+// land the slow-motion segment on a full approach, and the freeze mid-test (phase index, fraction within it)
 const ALIGN = [
-  { t0: 23.3, t1: 24.05, p: 0.80, cps: 2.0 },
-  { t0: 27.2, t1: 30.75, p: 0.62, cps: 0.2 },
+  { t0: 23.3, t1: 24.05, ph: 4, u: 0.02 },
+  { t0: 27.2, t1: 30.75, ph: 3, u: 0.8 },
 ];
 const END = { t: 42.6, dur: 48.5 };
 const NARR = window.NARR || null;
@@ -1364,7 +1441,7 @@ const director = {
   start() {
     this.on = true; this.t = 0; this.ai = 0; this.run = []; this.press = []; this.rip = null; this.visT = 0; this.vis = 0; this.li = 0;
     this.aligns = ALIGN.map((a) => ({ ...a }));
-    applyState({ od: 75, warp: 0, rate: 90, ts: 1, explode: 0, cut: false, trace: false, labels: true });
+    applyState({ od: 75, warp: 0, test: 1.5, ts: 1, explode: 0, cut: false, trace: false, labels: true });
     exS = 0; cutT = 0; traceT = 0; S.tsCur = 1;
     sim.dmg.cant = sim.dmg.vert = false; sim.flags = {};
     const r = stage.getBoundingClientRect(); this.cur = { x: r.left + r.width * 0.64, y: r.top + r.height * 0.78 };
@@ -1376,7 +1453,7 @@ const director = {
     voiceEl.pause();
     controls.target.set(...this.camL); controls.update();
     cursorEl.style.opacity = 0; rippleEl.style.opacity = 0; $('#caption').style.opacity = 0;
-    for (const inp of [ui.od, ui.warp, ui.rate, ui.explode]) inp.classList.remove('grab');
+    for (const inp of [ui.od, ui.warp, ui.test, ui.explode]) inp.classList.remove('grab');
     if (wallT && this.t < END.t) { $('#endcard').style.opacity = 0; $('#endcard').style.pointerEvents = 'none'; }
   },
   update(dt) {
@@ -1429,8 +1506,9 @@ const director = {
       if (t > a.t0 && t <= a.t1 + 1e-6) {
         if (!a.init) {
           a.init = true; a.c0 = sim.cyc; a.s0 = t;
-          const base = sim.cyc + (a.t1 - t) * a.cps; let best = null;
-          for (let k = -1; k <= 1; k++) { const cand = Math.floor(base) + k + a.p; if (cand > sim.cyc + 0.02 && (best === null || Math.abs(cand - base) < Math.abs(best - base))) best = cand; }
+          const E = phaseEdges(), pT = E[a.ph] + a.u * (E[a.ph + 1] - E[a.ph]);
+          const base = sim.cyc + (a.t1 - t) * S.ts / cycleT(); let best = null;
+          for (let k = -1; k <= 1; k++) { const cand = Math.floor(base) + k + pT; if (cand > sim.cyc + 0.02 && (best === null || Math.abs(cand - base) < Math.abs(best - base))) best = cand; }
           a.c1 = best;
         }
         return a.c0 + (a.c1 - a.c0) * clamp((t - a.s0) / (a.t1 - a.s0), 0, 1);
@@ -1491,7 +1569,7 @@ function frame(dt, render = true) {
   traceT = clamp(traceT + (S.trace ? dt : -dt) / 0.6, 0, 1);
   labelT = clamp(labelT + (S.labels ? dt : -dt) / 0.3, 0, 1);
   dmgT = clamp(dmgT + (sim.dmg.vert ? dt : -dt) / 0.6, 0, 1);
-  const nat = dt * S.tsCur * S.rate / 60;
+  const nat = dt * S.tsCur / cycleT();
   const al = director.on ? director.alignCyc() : null;
   simAdvance(al !== null ? al : sim.cyc + nat);
   simClock += dt * S.tsCur;
@@ -1509,11 +1587,11 @@ function frame(dt, render = true) {
 }
 
 resize();
-for (const inp of [ui.od, ui.warp, ui.rate, ui.explode]) inp.dispatchEvent(new Event('input'));
+for (const inp of [ui.od, ui.warp, ui.test, ui.explode]) inp.dispatchEvent(new Event('input'));
 
 if (RECORD) {
   // pre-run so the wafer map already has history
-  S.rate = 90; for (let i = 0; i < 12 * 30; i++) frame(1 / 30, false);
+  for (let i = 0; i < 12 * 30; i++) frame(1 / 30, false);
   director.start();
   window.__advance = (dt) => { frame(dt); return { t: director.t, done: director.t >= END.dur }; };
   window.__seek = (t) => { while (director.t + 1 / 30 < t) frame(1 / 30, false); frame(1 / 30); return director.t; };

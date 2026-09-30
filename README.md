@@ -6,7 +6,7 @@
 
 - **拆解**：從彈簧針塔一路拆到晶圓，每一層都有標籤。
 - **訊號路徑**：追一條訊號，從測試機走到晶粒。
-- **步進速度**：推高步進速度，看晶圓圖填滿。
+- **測試時間與快轉**：調整每次測試時間，或用 10×、60× 快轉看晶圓圖填滿。
 - **剖開探針頭**：看兩片導板中間的垂直探針。
 - **慢動作**：時間放慢到 1/10，看針尖刮過鋁墊。
 - **比較**：同一過驅量下，懸臂針和垂直針的針壓、針痕、接觸電阻。
@@ -18,7 +18,7 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 
 - exploding the stack
 - tracing a signal from tester to die
-- pushing the index rate
+- fast-forwarding time to watch the wafer map fill
 - cutting the probe head open
 - slowing time to 1/10
 - comparing cantilever and vertical probes at the same overdrive
@@ -27,12 +27,95 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 > 個人作品，示意用途。尺寸有放大、物理模型有簡化，所有數字都是業界通用的量級，不是任何產品或專案的實際規格，也不是官方資料。
 > Personal, unofficial demo. Geometry is exaggerated, the physics is simplified, and every number is a generic, textbook-level value.
 
+<!-- refs:start -->
+## 參數依據與參考來源
+
+這是示意模型：幾何尺寸有放大，物理是簡化公式。下面列出每個步驟和可調參數用的數值、公開資料裡的典型範圍，以及出處。所有來源都是公開文件；數字是業界通用量級，不是任何產品或專案的規格。
+
+### 針測流程
+
+1. **上片與對位（模擬器省略）**：晶圓從晶舟載入、做晶圓對位，再用上看／下看相機把探針對準鋁墊（PTPA）。 [3] [10]
+2. **步進 INDEX**：載台在 XY 方向移到下一組晶粒。含 Z 軸上下，典型步進時間約 0.7 秒。 [2] [7]
+3. **上升接觸 Z-UP**：載台抬升，直到探針第一次碰到鋁墊（first contact）。 [3] [10]
+4. **過驅 OVERDRIVE**：接觸後再往上壓一段距離，補償探針高低差，並讓針尖刮破鋁墊表面的氧化層。 [3] [5] [20]
+5. **電性測試 TEST**：訊號由測試機經彈簧針、主板、MLO 載板、探針到晶粒。測試時間通常遠大於移動時間。 [31] [34] [7]
+6. **離開 RELEASE**：載台下降，晶粒依結果分 bin 記進晶圓圖，再換下一組。 [30] [2]
+7. **清針與針痕檢查**：每隔數十到上百次下針，用清針片清掉針尖的沾黏物，並定期檢查針痕（PMI）。模擬器只做了計數和接觸電阻漂移。 [29] [30] [11]
+8. **溫度（模擬器省略）**：量產常在 −55 °C 到 150–200 °C 之間測試，探針卡和機台都需要預熱。 [37]
+
+### 可調參數對照
+
+| 參數 | 模擬器用的值 | 公開資料的典型範圍 | 來源 |
+|---|---|---|---|
+| 過驅量 Overdrive | 0–200 μm，預設 75 μm；標示的常用範圍 50–100 μm | 懸臂針 25–100 μm，常用 50–75 μm；垂直針在鋁墊上約 75 μm；凸塊／銅柱可到 150–200 μm | [3] [4] [5] [17] [15] |
+| 懸臂針針壓 | 0.06 gf/μm，75 μm 時約 4.5 gf（線性） | 鎢／鎢錸針 1.0–2.5 gf/mil，也就是 0.04–0.10 gf/μm | [4] [19] |
+| 垂直針針壓 | Cobra 型挫曲針：75 μm 時約 4.5 gf，之後趨平 | Cobra／挫曲針在 75 μm 約 4.5–6.5 g；新一代 MEMS 垂直針只有 1–3 g | [12] [13] [14] [21] [24] |
+| 針痕長度 | 懸臂 ≈ 0.22×OD＋6 μm（75 μm 時約 23 μm）；垂直 ≈ 0.05×OD＋10 μm（約 14 μm） | 懸臂 15–25 μm（文獻範圍 13–38 μm）；垂直 11–18 μm，主要是針尖本身的大小 | [20] [18] [16] [15] [13] |
+| 鋁墊尺寸 | 60 μm | 打線鋁墊約 55–90 μm 見方 | [4] [13] [16] |
+| 接觸電阻 CRES | 壓穩後約 0.1–0.3 Ω；過驅量太小時偏高 | 穩定值 < 0.25–0.3 Ω，規格常訂 < 1 Ω；過驅量超過約 25–60 μm 才會穩定 | [13] [17] [18] [6] |
+| 過載上限（示意） | 懸臂 125 μm、垂直 170 μm | 懸臂針過驅量一般不超過 127 μm，否則針尖會損傷；挫曲針常用到 150 μm；MEMS 垂直針多限制在 100 μm。公開資料沒有實測的塑性變形門檻 | [22] [16] [14] [15] |
+| 平整度 | 翹曲 0–100 μm，超過 25 μm 標為超標 | 探針平整度規格約 ≤25 μm 或 ±10–20 μm；受力或升溫後整張卡可再變形數十 μm | [4] [23] [17] [26] |
+| 探針尺寸與材質 | 垂直針長約 5 mm；懸臂針為鎢錸 | Cobra／挫曲針長 4.3–6.4 mm、線徑 25–64 μm；鎢錸是最常見的懸臂針材料 | [13] [4] [22] |
+| Z 分離距離 | 200 μm | 公開規格為 200–300 μm，量產機台由 recipe 設定 | [8] [9] |
+| 每次移動時間 | 0.7 秒（步進 0.35＋上升 0.15＋過驅 0.08＋離開 0.12） | 典型步進時間 0.7 秒；工程機台 0.75–1.5 秒 | [7] [8] |
+| 每次測試時間 | 0.2–60 秒，預設 1.5 秒（約 27 次／分）；另有 10×、60× 快轉 | 依產品從數秒到數分鐘，公開例子有 5 秒、10 秒、180 秒 | [1] [28] [7] |
+| 同測顆數 | 每次下針 4 顆 | 大晶粒的 AI 處理器 x8–x16；一般邏輯可達 128 顆以上；DRAM 可以一次測完整片 | [27] [28] [1] |
+| 清針間隔 | 每 100 次下針；接觸電阻隨次數緩慢升高（示意） | 常見做法是每 50–100 次清一次，實際間隔依產品調整 | [29] [30] |
+| 探針數與總針壓 | 這張卡 224 針 | HPC 卡約 2 萬針、每針約 2 g；最新的卡超過 10 萬針，總針壓 170–280 kgf，接近載台約 300 kgf 的上限 | [24] [25] [26] |
+| 晶圓與晶粒 | 300 mm 晶圓、約 18 mm 晶粒、157 顆 | 18 mm 晶粒、邊緣排除 3 mm 時約 170–180 顆毛晶粒（依標準公式推算） |  |
+| 主板層數 | 標示「數十層」 | 公開的探針卡 PCB 例子為 42–76 層、厚 2.7–9.6 mm | [33] |
+| 探針卡結構與 DIS | 彈簧針塔 → 補強板 → 主板 → MLO 載板 → 探針頭 → 晶圓 | 主板、（中介層）、空間轉換板、探針頭的組成與專利描述一致；補強板是機構件，不在訊號路徑上。DIS Tech 在 2024 年 5 月由 Technoprobe 自 Teradyne 收購 | [31] [32] [34] [35] [36] |
+
+模擬器沒有做的部分：溫度、上片與對位、針痕檢查、探針磨耗與壽命（公開資料為 100 萬次以上）、電流承載能力，以及整張卡受力後的變形（高針數卡上，實際過驅量只有設定值的一部分）。
+
+### 參考文獻
+
+1. [Wikipedia — Probe card](https://en.wikipedia.org/wiki/Probe_card)
+2. [Wikipedia — Wafer testing](https://en.wikipedia.org/wiki/Wafer_testing)
+3. [ITC / Cerprobe — Introduction to Probe Cards, SWTW 1998](http://www.swtest.org/swtw_library/1998proc/PDF/T2_itc1.pdf)
+4. [Tektronix / Keithley — Probe Card Tutorial](https://www.tek.com/en/documents/whitepaper/probe-card-tutorial)
+5. [Goldstein — Probe Cards Enable Wafer-level Test, Solid State Technology 2005](https://sst.semiconductor-digest.com/2005/12/probe-cards-enable-wafer-level-test/)
+6. [Tunaboylu & Soydan — MEMS Technologies Enabling the Future Wafer Test Systems, IntechOpen 2018](https://www.intechopen.com/chapters/58798)
+7. [Goel & Marinissen — On-Chip Test Infrastructure Design for Optimal Multi-Site Testing](https://arxiv.org/pdf/0710.4687)
+8. [FormFactor — CM300xi data sheet](https://www.formfactor.com/download/cm300xi-data-sheet/?wpdmdl=3294)
+9. [MPI — TS150 / TS200 / TS300 probe systems](https://www.mpi-corporation.com/ast/engineering-probe-systems/mpi-manual-probe-systems/mpi-ts150-ts200-ts300/)
+10. [US10416228B2 (Tokyo Seimitsu) — Prober](https://patents.google.com/patent/US10416228B2/en)
+11. [Tokyo Electron — Inspection Features, P-8 Prober Family, SWTW 1997](http://www.swtest.org/swtw_library/1997proc/PDF/tel8_ml.pdf)
+12. [Vallauri et al. (Technoprobe) — TPEG MEMS vertical probes, SWTW 2012](https://www.swtest.org/swtw_library/2012proc/PDF/S05_04_Vallauri_SWTW2012.pdf)
+13. [Mialhe et al. (K&S) — Cobra FP Probe Card, SWTW 2005](https://www.swtest.org/swtw_library/2005proc/PDF/S04_02_Mialhe.pdf)
+14. [Lindsey et al. — How To Buckle Under Pressure, SWTW 2009](https://www.swtest.org/swtw_library/2009proc/PDF/S01_02_Lindsey_SWTW2009.pdf)
+15. [Broz et al. (MJC) — Advanced Vertical Technologies for Low Damage Probing, SWTW 2017](https://www.swtest.org/swtw_library/2017proc/PDF/S07_01_Broz_SWTW2017R2.pdf)
+16. [Sangiorgio & Vettori (Technoprobe) — TPEG Mantis, SWTW 2018](http://www.swtest.org/swtw_library/2018proc/PDF/S03_01_Vettori_SWTW2018.pdf)
+17. [Yun & Vallauri (Technoprobe) — HBM microbump probing, SWTW 2017](https://www.swtest.org/swtw_library/2017proc/PDF/S03_01_Vallauri_SWTW2017.pdf)
+18. [Bischoff et al. (TI / ITS / FormFactor) — SWTW 2012](https://www.swtest.org/swtw_library/2012proc/PDF/S02_02_Bischoff_SWTW2012.pdf)
+19. [Doutre et al. — SWTW 2015](https://www.swtest.org/swtw_library/2015proc/PDF/S05_03_Doutre_SWTW2015R.pdf)
+20. [US5773987A — cantilever probe scrub](https://patents.google.com/patent/US5773987A/en)
+21. [US10996243B2 — vertical probe force curve](https://patents.google.com/patent/US10996243B2/en)
+22. [Electronic Design — Wafer Testing with Tungsten and Tungsten-Rhenium Probe Needles](https://www.electronicdesign.com/home/article/21199980/wafer-testing-with-tungsten-and-tungsten-rhenium-probe-needles)
+23. [Wolfe (TI / MJC) — 50 μm pitch vertical probing, SWTW 2009](https://www.swtest.org/swtw_library/2009proc/PDF/S08_02_Wolfe_SWTW2009.pdf)
+24. [SemiEngineering — Delivering On Power During HPC Test, 2024](https://semiengineering.com/delivering-on-power-during-hpc-test/)
+25. [Ghidoni et al. (Technoprobe / Advantest) — Towards Ultra-High Pin Count Probe Card, SWTest Asia 2024](https://www.swtestasia.org/2024proc/pdf/poster/P00_15_GHIDONI_SWTestAsia2024.pdf)
+26. [Hsieh (MPI) — 100K+ Ultra High Pin Count Probe Card, SWTest Asia 2024](https://www.swtestasia.org/2024proc/pdf/T02_03_HSIEH_SWTestAsia2024.pdf)
+27. [FormFactor — AI Processors (high-volume wafer test)](https://www.formfactor.com/applications/high-volume-test-on-wafer/ai-processors/)
+28. [Dastmalchi, Heitzer & Harker — Advancing Probe Card Parallelism for SOC Devices, SWTest 2022](https://www.swtest.org/library/2022proc/pdf/M03_03_Dastmalchi_SWTest_2022F.pdf)
+29. [SemiEngineering — Cleaning Up During IC Test](https://semiengineering.com/cleaning-up-during-ic-test/)
+30. [Broz et al. — Probe Card Cleaning: A Short Tutorial, SWTW 2007](https://www.swtest.org/swtw_library/2007proc/PDF/T00_01_Broz_SWTW2007.pdf)
+31. [US7217139B2 — Interconnect assembly for a probe card](https://patents.google.com/patent/US7217139B2/en)
+32. [US11209463B2 (Technoprobe) — Probe card for a testing apparatus](https://patents.google.com/patent/US11209463B2/en)
+33. [FICT — probe card PCB examples](https://www.fict-g.com/en/product/probe.html)
+34. [DIS Tech — Our technologies](https://www.dis.tech/technologies-and-products/our-technologies)
+35. [DIS Tech — company site](https://www.dis.tech/)
+36. [Teradyne — Form 10-K, fiscal year 2024](https://www.sec.gov/Archives/edgar/data/97210/000095017025023784/ter-20241231.htm)
+37. [KYEC — Wafer Probing service](https://www.kyec.com.tw/en/Service/wafer-probing)
+<!-- refs:end -->
+
 ## 檔案
 
 | 檔案 | 用途 |
 |---|---|
 | `index.html` | 整個模擬器（three.js，從 CDN 載入） |
 | `narration.js`、`audio/` | 導覽旁白與時間軸（由 `narration.py` 產生） |
+| `sources.js` | 每個參數的模擬值、公開資料的典型範圍和出處；網站的「參數依據」視窗和本頁的參考來源都由它產生（`python make_refs.py`） |
 | `narration.py` | 用 Gemini 3.8 Flash Lite TTS（Kore）合成旁白，每句錄一次，用本機 faster-whisper 聽寫比對，念錯就重錄，挑錯字最少的一次。接著依句長拉長導覽時間軸，把聲音混進影片。API 金鑰從 `GEMINI_API_KEY` 或上層資料夾的 `.env` 讀取，不在 repo 裡 |
 | `record.py` | 用無頭 Chromium 逐幀錄下導覽，輸出 1080p30 MP4 |
 
