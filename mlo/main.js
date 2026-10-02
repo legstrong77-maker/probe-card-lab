@@ -322,7 +322,7 @@ function updateDOM() {
     : Math.abs(bow) > BOW_LIMIT ? `上下銅量不平衡：整片翹了 ${bow.toFixed(0)} μm。`
     : `扇出夠用、${S.temp} °C 時角落偏 ${off.toFixed(1)} μm、翹曲 ${bow.toFixed(0)} μm：這片 MLO 可以用。`;
   setText('planLine', msg, need > nSig || Math.abs(off) > tol || Math.abs(bow) > BOW_LIMIT ? 'bad' : '');
-  const foot = `<b>這片 MLO：</b>${P.tech === 'mlc' ? '陶瓷多層板' : `${S.nTop}+核心+${S.nBot}，厚 ${(lam.thick / 1000).toFixed(2)} mm`}，探針側間距 ${S.pitch} μm、主板側 ${BALL_PITCH.toFixed(1)} mm，平面方向的熱膨脹係數約 ${cte.toFixed(1)} ppm/K（矽 ${MAT.si.a}）。 <a href="#" id="refsLink">參數依據與參考來源 →</a><br><span class="dis">DIS 做的：</span>${window.MLO_SOURCES ? window.MLO_SOURCES.dis : ''}個人作品、示意模型：尺寸放大、物理簡化，數字為業界通用量級，非官方資料。`;
+  const foot = `<b>這片 MLO：</b>${P.tech === 'mlc' ? '陶瓷多層板' : `${S.nTop}+核心+${S.nBot}，厚 ${(lam.thick / 1000).toFixed(2)} mm`}，探針側間距 ${S.pitch} μm、主板側 ${BALL_PITCH.toFixed(1)} mm，平面方向的熱膨脹係數約 ${cte.toFixed(1)} ppm/K（矽 ${MAT.si.a}）。 <a href="#" id="refsLink">參數依據與參考來源 →</a> · <a href="../test/?st=4">出貨前怎麼量平整度 →</a><br><span class="dis">DIS 做的：</span>${window.MLO_SOURCES ? window.MLO_SOURCES.dis : ''}個人作品、示意模型：尺寸放大、物理簡化，數字為業界通用量級，非官方資料。`;
   if (cache.get('foot') !== foot) { cache.set('foot', foot); $('#foot').innerHTML = foot; }
 }
 $('#steps').innerHTML = STEPS.map((s, i) => `<span>${i + 1}<small>${s.zh}</small></span>`).join('');

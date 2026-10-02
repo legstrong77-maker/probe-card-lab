@@ -10,6 +10,21 @@
 
 **MLO 載板實驗室（空間轉換板）：https://legstrong77-maker.github.io/probe-card-lab/mlo/** · [說明與參考來源](mlo/README.md)
 
+**出貨前測試實驗室：https://legstrong77-maker.github.io/probe-card-lab/test/** · [說明與參考來源](test/README.md)
+
+### 從晶圓到出貨：六頁怎麼串起來
+
+每一頁上方都有同一條導覽列，照這個順序讀：
+
+1. **探針卡**（這一頁）：晶圓測試時，探針卡怎麼把測試機接到每一顆晶粒。
+2. **MLO 載板**：探針卡裡把幾十微米的探針間距攤開到主板的多層有機載板，怎麼做、為什麼會翹。
+3. **出貨測試**：主板焊上 MLO 之後要過的六關：光學檢查、飛針、網路與四線量測、X 光、平整度、上機診斷。
+4. **成品測試板**：封裝好的晶片在測試座上做最後測試。
+5. **訊號與電源**：厚板子上的高速訊號和大電流電源。
+6. **遊戲**：當一次針測工程師。
+
+每段導覽結束時，結尾畫面有「下一站」按鈕。
+
 這是一張在瀏覽器裡就能拆開的晶圓針測（CP）探針卡。
 
 - **拆解**：從彈簧針塔一路拆到晶圓，每一層都有標籤。
@@ -174,6 +189,8 @@ A wafer-sort probe card you can take apart in the browser. It covers:
 | `sources.js` | 每個參數的模擬值、公開資料的典型範圍和出處；網站的「參數依據」視窗和本頁的參考來源都由它產生（`python make_refs.py`） |
 | `narration.py` | 用 Gemini 3.8 Flash Lite TTS（Kore）合成旁白，每句錄一次，用本機 faster-whisper 聽寫比對，念錯就重錄，挑錯字最少的一次。接著依句長拉長導覽時間軸，把聲音混進影片。API 金鑰從 `GEMINI_API_KEY` 或上層資料夾的 `.env` 讀取，不在 repo 裡 |
 | `record.py` | 用無頭 Chromium 逐幀錄下導覽，輸出 1080p30 MP4 |
+| `nav.js` | 每一頁上方的導覽列（從晶圓到出貨）和結尾畫面的「下一站」按鈕 |
+| `mlo/`、`test/`、`ft/`、`si/` | 其他四頁，各自的說明與參考來源在資料夾裡的 README |
 | `game/model.js` | 遊戲的物理與計分（純函式）；`game/tune.mjs` 用它掃描每關的得分分布 |
 | `game/scene.js`、`game/audio.js` | 遊戲的 3D 場景，以及即時合成的配樂與音效 |
 | `game/content.js`、`game/main.js` | 關卡文字與結算說明；畫面與流程 |
@@ -190,6 +207,7 @@ python record.py --size 540x960 --dpr 2 --name vertical   # 直式 9:16（1080×
 python record.py --page ft    # 成品測試板那一頁的導覽 -> ft/ft-board-lab.mp4（旁白：python ft/narration.py tts）
 python record.py --page si    # 訊號與電源那一頁的導覽 -> si/si-pi-lab.mp4（旁白：python si/narration.py tts）
 python record.py --page mlo   # MLO 載板那一頁的導覽 -> mlo/mlo-lab.mp4（旁白：python mlo/narration.py tts）
+python record.py --page test  # 出貨測試那一頁的導覽 -> test/test-lab.mp4（旁白：python test/narration.py tts）
 ```
 
 Built with Claude Opus 5.5.

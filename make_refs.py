@@ -1,4 +1,4 @@
-"""Copy the parameter tables and reference lists from sources.js, ft/, si/ and mlo/sources.js into each README.
+"""Copy the parameter tables and reference lists from sources.js, ft/, si/, mlo/ and test/sources.js into each README.
 
   python make_refs.py      # needs node, which evaluates the sources files
 
@@ -79,4 +79,19 @@ s4 = open(p4, encoding="utf-8").read()
 a, b = s4.index("<!-- refs:start -->"), s4.index("<!-- refs:end -->") + len("<!-- refs:end -->")
 open(p4, "w", encoding="utf-8", newline=chr(10)).write(s4[:a] + chr(10).join(out) + s4[b:])
 print(f"mlo/README: {len(M['steps'])} steps, {len(M['params'])} parameters, {len(M['refs'])} references")
+# ---- Test Lab (test/)
+js = "global.window={}; require('./test/sources.js'); process.stdout.write(JSON.stringify(window.TEST_SOURCES))"
+X = json.loads(subprocess.check_output(["node", "-e", js], cwd=HERE).decode("utf-8"))
+out = ["<!-- refs:start -->", "## 參數依據與參考來源", "", X["intro"], "", "### 六站在量什麼", ""]
+out += [f"{i}. **{x['zh']}**：{x['d']} {cite(x['r'])}" for i, x in enumerate(X["steps"], 1)]
+out += ["", "### 可調參數對照", "", "| 參數 | 這一頁用的值 | 公開資料 | 來源 |", "|---|---|---|---|"]
+out += [f"| {x['p']} | {x['sim']} | {x['real']} | {cite(x['r'])} |" for x in X["params"]]
+out += ["", X["left"], "", "### 參考文獻", ""]
+out += [f"{i}. [{x['t']}]({x['u']})" for i, x in enumerate(X["refs"], 1)]
+out += ["<!-- refs:end -->"]
+p5 = os.path.join(HERE, "test", "README.md")
+s5 = open(p5, encoding="utf-8").read()
+a, b = s5.index("<!-- refs:start -->"), s5.index("<!-- refs:end -->") + len("<!-- refs:end -->")
+open(p5, "w", encoding="utf-8", newline=chr(10)).write(s5[:a] + chr(10).join(out) + s5[b:])
+print(f"test/README: {len(X['steps'])} stations, {len(X['params'])} parameters, {len(X['refs'])} references")
 print(f"README: {len(S['steps'])} steps, {len(S['params'])} parameters, {len(S['game'])} game rows, {len(S['refs'])} references")
