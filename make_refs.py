@@ -1,4 +1,4 @@
-"""Copy the parameter tables and reference lists from sources.js, ft/sources.js and si/sources.js into README.md, ft/README.md and si/README.md.
+"""Copy the parameter tables and reference lists from sources.js, ft/, si/ and mlo/sources.js into each README.
 
   python make_refs.py      # needs node, which evaluates the sources files
 
@@ -64,4 +64,19 @@ s3 = open(p3, encoding="utf-8").read()
 a, b = s3.index("<!-- refs:start -->"), s3.index("<!-- refs:end -->") + len("<!-- refs:end -->")
 open(p3, "w", encoding="utf-8", newline="\n").write(s3[:a] + "\n".join(out) + s3[b:])
 print(f"si/README: {len(I['steps'])} formulas, {len(I['params'])} parameters, {len(I['refs'])} references")
+# ---- MLO Lab (mlo/)
+js = "global.window={}; require('./mlo/sources.js'); process.stdout.write(JSON.stringify(window.MLO_SOURCES))"
+M = json.loads(subprocess.check_output(["node", "-e", js], cwd=HERE).decode("utf-8"))
+out = ["<!-- refs:start -->", "## 參數依據與參考來源", "", M["intro"], "", "### MLO 是怎麼做出來的", ""]
+out += [f"{i}. **{x['zh']}**：{x['d']} {cite(x['r'])}" for i, x in enumerate(M["steps"], 1)]
+out += ["", "### 可調參數對照", "", "| 參數 | 這一頁用的值 | 公開資料 | 來源 |", "|---|---|---|---|"]
+out += [f"| {x['p']} | {x['sim']} | {x['real']} | {cite(x['r'])} |" for x in M["params"]]
+out += ["", M["left"], "", "### 參考文獻", ""]
+out += [f"{i}. [{x['t']}]({x['u']})" for i, x in enumerate(M["refs"], 1)]
+out += ["<!-- refs:end -->"]
+p4 = os.path.join(HERE, "mlo", "README.md")
+s4 = open(p4, encoding="utf-8").read()
+a, b = s4.index("<!-- refs:start -->"), s4.index("<!-- refs:end -->") + len("<!-- refs:end -->")
+open(p4, "w", encoding="utf-8", newline=chr(10)).write(s4[:a] + chr(10).join(out) + s4[b:])
+print(f"mlo/README: {len(M['steps'])} steps, {len(M['params'])} parameters, {len(M['refs'])} references")
 print(f"README: {len(S['steps'])} steps, {len(S['params'])} parameters, {len(S['game'])} game rows, {len(S['refs'])} references")

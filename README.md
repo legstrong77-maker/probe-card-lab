@@ -8,6 +8,8 @@
 
 **訊號與電源完整性實驗室：https://legstrong77-maker.github.io/probe-card-lab/si/** · [說明與參考來源](si/README.md)
 
+**MLO 載板實驗室（空間轉換板）：https://legstrong77-maker.github.io/probe-card-lab/mlo/** · [說明與參考來源](mlo/README.md)
+
 這是一張在瀏覽器裡就能拆開的晶圓針測（CP）探針卡。
 
 - **拆解**：從彈簧針塔一路拆到晶圓，每一層都有標籤。
@@ -187,6 +189,7 @@ python record.py          # -> build/silent.mp4 -> probe-card-lab.mp4（含旁�
 python record.py --size 540x960 --dpr 2 --name vertical   # 直式 9:16（1080×1920，用手機版面）-> probe-card-lab-vertical.mp4
 python record.py --page ft    # 成品測試板那一頁的導覽 -> ft/ft-board-lab.mp4（旁白：python ft/narration.py tts）
 python record.py --page si    # 訊號與電源那一頁的導覽 -> si/si-pi-lab.mp4（旁白：python si/narration.py tts）
+python record.py --page mlo   # MLO 載板那一頁的導覽 -> mlo/mlo-lab.mp4（旁白：python mlo/narration.py tts）
 ```
 
 Built with Claude Opus 5.5.

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Final Test Board Lab · 成品測試板拆解</title>
-<meta name="description" content="在瀏覽器裡拆開成品測試（FT）的介面：測試機、彈簧針、測試載板、測試座、分類機。">
+<title>MLO Lab · MLO 載板實驗室</title>
+<meta name="description" content="在瀏覽器裡拆開探針卡的 MLO 載板：扇出、增層製程、熱膨脹與翹曲。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@ button{font:inherit;color:inherit}
 .brand::before{content:"";position:absolute;left:-28px;top:-24px;width:620px;height:170px;background:radial-gradient(ellipse at 0 0,rgba(5,7,11,.88),rgba(5,7,11,0) 70%);z-index:-1}
 .eyebrow{font:600 11px/1 var(--mono);letter-spacing:2.2px;color:var(--accent);text-transform:uppercase}
 .brand h1{margin:9px 0 5px;font-size:31px;font-weight:900;letter-spacing:1px}
-.brand p{margin:0;color:var(--muted);font-size:13.5px}
+.brand p{margin:0;color:var(--muted);font-size:13.5px;text-shadow:0 0 2px rgba(0,0,0,.95),0 1px 8px rgba(0,0,0,.9)}
 
 .hud{position:absolute;right:20px;top:20px;width:214px;padding:12px 13px 8px;border:1px solid var(--line);background:rgba(8,11,17,.8);border-radius:10px}
 .hud .eyebrow{margin-bottom:8px;display:flex;justify-content:space-between}
@@ -74,9 +74,9 @@ button{font:inherit;color:inherit}
 .ph i{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);width:0}
 .ph.on{color:var(--text);border-color:rgba(76,201,240,.55);background:rgba(14,34,46,.8)}
 
-#caption{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:92%;text-align:center;pointer-events:none;opacity:0}
+#caption{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:92%;text-align:center;pointer-events:none;opacity:0;padding:14px 0 16px;background:radial-gradient(closest-side,rgba(4,7,11,.62),rgba(4,7,11,.38) 60%,rgba(4,7,11,0))}
 #caption .zh{display:block;font-size:31px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 20px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
-#caption .en{display:block;margin-top:7px;font-size:16.5px;color:#bcc6d4;font-weight:500;text-shadow:0 2px 12px rgba(0,0,0,.95)}
+#caption .en{display:block;margin-top:7px;font-size:16.5px;color:#d3dbe6;font-weight:500;text-shadow:0 0 2px rgba(0,0,0,1),0 1px 4px rgba(0,0,0,.95),0 2px 12px rgba(0,0,0,.95)}
 
 #endcard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(4,6,10,.9);opacity:0;pointer-events:none;text-align:center;padding:24px}
 #endcard .big{font-size:44px;font-weight:900;letter-spacing:1px}
@@ -92,7 +92,15 @@ button{font:inherit;color:inherit}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .sec-head .r{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
 .sec-head .r b{color:var(--text)}
-#scope{width:100%;aspect-ratio:560/270;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
+#xs{width:100%;aspect-ratio:560/250;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.duo canvas{width:100%;height:150px;display:block;border-radius:10px;border:1px solid var(--line);background:#070a10}
+.duo .sec-head{margin-bottom:4px}
+#steps{display:flex;gap:3px;flex-wrap:wrap}
+#steps span{flex:1;min-width:58px;text-align:center;font:600 10.5px/1.25 var(--mono);padding:5px 3px;border-radius:6px;border:1px solid var(--line);color:var(--dim);background:rgba(8,11,17,.6)}
+#steps span small{display:block;font:500 10.5px var(--sans);margin-top:1px}
+#steps span.on{color:var(--text);border-color:rgba(76,201,240,.6);background:rgba(14,34,46,.8)}
+#steps span.done{color:#8fd8f5}
 .cmp{display:grid;grid-template-columns:128px 1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
 .cmp>div{padding:5px 12px;border-bottom:1px solid var(--line);font:600 13px/1.3 var(--mono);display:flex;align-items:center;min-height:31px}
 .cmp>div:nth-last-child(-n+3){border-bottom:0}
@@ -164,7 +172,7 @@ html.rec #gl{cursor:default}
   #stage{height:62vh;height:62svh;min-height:340px}
   #gl{touch-action:pan-y}
   #panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
-  .controls{order:1} #planLine{order:2} #hScope{order:3} #scope{order:4} .cmp{order:5} .charts{order:6} .foot{order:8}
+  .controls{order:1} #planLine{order:2} #hXs{order:3} #xs{order:4} #steps{order:5} .cmp{order:6} .duo{order:7} .foot{order:8}
   .hud{transform:scale(.8);transform-origin:top right}
   .brand{left:16px;top:14px} .brand h1{font-size:22px} .brand p{display:none}
   #speed{top:74px;left:16px}
@@ -178,7 +186,7 @@ html.rec #gl{cursor:default}
   .controls{grid-template-columns:1fr;gap:12px}
   .cmp{grid-template-columns:92px 1fr 1fr}
   .cmp>div{padding:5px 8px;font-size:12px}
-  .charts{grid-template-columns:1fr}
+  .duo{grid-template-columns:1fr}
   .hud{display:none}
   .eyebrow{font-size:9.5px;letter-spacing:1.6px}
   .brand h1{font-size:19px;margin:6px 0 0}
@@ -215,65 +223,62 @@ html.rec #gl{cursor:default}
     <svg id="leaders"></svg>
     <div id="labels"></div>
     <div class="brand">
-      <div class="eyebrow">Final Test Board Lab · Package Test (FT)</div>
-      <h1>成品測試板拆解實驗室</h1>
-      <p>Take a final-test interface apart in your browser — tester to solder ball.</p>
+      <div class="eyebrow">MLO Lab · Space Transformer</div>
+      <h1>MLO 載板實驗室</h1>
+      <p>Take a probe card's space transformer apart — fan-out, build-up, heat and warpage.</p>
     </div>
     <div class="hud">
-      <div class="eyebrow">Results <span id="lotNo">tray #1</span></div>
-      <canvas id="bins"></canvas>
-      <div class="stat">TESTED <b id="stTested">0</b></div>
-      <div class="stat">FIRST-PASS YIELD <b id="stYield">—</b></div>
-      <div class="stat">THROUGHPUT <b id="stUph">—</b></div>
-      <div class="stat">INSERTIONS / SOCKET <b id="stIns">0</b></div>
-      <div class="stat">SINCE CLEAN <b id="stClean">0</b></div>
+      <div class="eyebrow">Stack-up <span id="stackNo">6+C+6</span></div>
+      <div class="stat">PROBE PITCH <b id="stPitch">—</b></div>
+      <div class="stat">BALL PITCH <b id="stBall">—</b></div>
+      <div class="stat">FAN-OUT <b id="stFan">—</b></div>
+      <div class="stat">THICKNESS <b id="stThick">—</b></div>
+      <div class="stat">CTE (x-y) <b id="stCte">—</b></div>
+      <div class="stat">TEMPERATURE <b id="stTemp">—</b></div>
     </div>
     <div id="speed"></div>
     <div id="toasts"></div>
-    <div id="phases">
-      <div class="ph">PICK<small>取料</small><i></i></div>
-      <div class="ph">PLACE<small>移到測試座</small><i></i></div>
-      <div class="ph">PLUNGE<small>下壓接觸</small><i></i></div>
-      <div class="ph">TEST<small>電性測試</small><i></i></div>
-      <div class="ph">SORT<small>分類</small><i></i></div>
-    </div>
     <div id="caption"><span class="zh"></span><span class="en"></span></div>
     <div id="endcard">
-      <div class="big">從晶圓到成品，每一顆都要碰兩次</div>
-      <div class="en">Every chip gets touched twice — once on the wafer, once in the package.</div>
+      <div class="big">平不平、準不準，決定上萬支探針能不能同時碰好</div>
+      <div class="en">Flat and true: that is what lets tens of thousands of probes land at once.</div>
       <div class="by">BUILT WITH CLAUDE OPUS 5.5 · RUNS LIVE IN THE BROWSER</div>
       <div class="hint" id="endHint"></div>
     </div>
   </div>
 
   <aside id="panel">
-    <div class="sec-head" id="hScope"><span class="eyebrow">Microscope · 接點顯微（同一下壓行程）</span><span class="r">stroke <b id="zNow">0.00</b> mm</span></div>
-    <canvas id="scope"></canvas>
+    <div class="sec-head" id="hXs"><span class="eyebrow" id="xsTitle">Cross-section · 剖面</span><span class="r" id="xsR"></span></div>
+    <canvas id="xs"></canvas>
+    <div id="steps"></div>
     <div class="cmp">
-      <div class="k"></div><div class="h s">CENTER BALL<small>中心的錫球 · 最先碰到</small></div><div class="h e">CORNER BALL<small>角落的錫球 · 最後碰到</small></div>
-      <div class="k">Pin travel<small>探針壓縮量</small></div><div id="tC">—</div><div id="tK">—</div>
-      <div class="k">Force<small>接觸力</small></div><div id="fC">—</div><div id="fK">—</div>
-      <div class="k">CRES<small>接觸電阻</small></div><div id="rC">—</div><div id="rK">—</div>
-      <div class="k">Travel used<small>行程 / 上限</small></div><div><span id="pC">0%</span><span class="bar"><i id="bC"></i></span></div><div><span id="pK">0%</span><span class="bar"><i id="bK"></i></span></div>
+      <div class="k"></div><div class="h s">FAN-OUT<small>扇出</small></div><div class="h e">HEAT &amp; WARP<small>熱與翹曲</small></div>
+      <div class="k">Need<small>需要</small></div><div id="kNeed">—</div><div id="kOff">—</div>
+      <div class="k">Have<small>目前</small></div><div id="kHave">—</div><div id="kBow">—</div>
+      <div class="k">Per layer<small>每層拉出</small></div><div id="kPer">—</div><div id="kCte">—</div>
+      <div class="k">Status<small>狀態</small></div><div><span id="pF">—</span><span class="bar"><i id="bF"></i></span></div><div><span id="pW">—</span><span class="bar"><i id="bW"></i></span></div>
     </div>
-    <div class="charts">
-      <div><div class="sec-head"><span class="eyebrow">Force vs stroke · 接觸力</span></div><canvas id="chart"></canvas></div>
-      <div><div class="sec-head"><span class="eyebrow">Throughput · 每小時產出</span><span class="r"><b id="uphNow">—</b></span></div><canvas id="uph"></canvas></div>
+    <div class="duo">
+      <div><div class="sec-head"><span class="eyebrow">扇出 Fan-out</span><span class="r" id="fanR"></span></div><canvas id="fan"></canvas></div>
+      <div><div class="sec-head"><span class="eyebrow">角落偏移 Offset</span><span class="r" id="offR"></span></div><canvas id="off"></canvas></div>
     </div>
     <div id="planLine"></div>
     <div class="controls">
-      <label class="ctl"><span>Stroke<small>下壓行程</small></span><output id="strokeOut">0.40 mm</output><input id="stroke" type="range" min="0" max="80" step="1" value="40"></label>
-      <label class="ctl"><span>Package warpage<small>封裝翹曲</small></span><output id="warpOut">0.05 mm</output><input id="warp" type="range" min="0" max="40" step="1" value="5"></label>
-      <label class="ctl"><span>Test time<small>測試時間</small></span><output id="testOut">3.0 s</output><input id="test" type="range" min="0" max="100" step="1" value="40"></label>
-      <label class="ctl"><span>Index time<small>換料時間</small></span><output id="idxOut">0.6 s</output><input id="idx" type="range" min="0" max="100" step="1" value="30"></label>
-      <div class="ctl"><span>Sites<small>同測顆數</small></span><output id="nOut">×4</output>
-        <div class="seg" id="segN"><button data-n="1">×1</button><button data-n="2">×2</button><button data-n="4" class="on">×4</button><button data-n="8">×8</button></div></div>
-      <label class="ctl"><span>Explode<small>拆解</small></span><output id="exOut">0%</output><input id="explode" type="range" min="0" max="100" step="1" value="0"></label>
-      <div class="ctl full"><span>Time<small>時間</small></span><output id="tsOut">1×</output>
-        <div class="seg" id="segT"><button data-ts="0.1">1/10×</button><button data-ts="1" class="on">1×</button><button data-ts="10">10×</button><button data-ts="60">60×</button><button data-ts="0">❚❚</button></div></div>
-      <div class="row full"><button id="tCut" class="tog">Cut open 剖開</button><button id="tTrace" class="tog">Trace signal 訊號路徑</button><button id="tLabels" class="tog on">Labels 標籤</button></div>
-      <div class="row full"><button id="tour" class="btn primary">▶ Guided tour 導覽</button><button id="clean" class="btn">Clean sockets 清潔測試座</button><button id="refsBtn" class="btn">參數依據 Sources</button></div>
-      <div class="row full"><a class="btn" href="../">← 探針卡 Probe card</a><a class="btn" href="../mlo/">MLO 載板</a><a class="btn" href="../si/">訊號與電源</a><a class="btn" href="../game/">🎮 遊戲</a></div>
+      <label class="ctl"><span>Probe pitch<small>探針間距</small></span><output id="pitchOut"></output><input id="pitch" type="range" min="40" max="200" step="5" value="80"></label>
+      <label class="ctl"><span>Line / space<small>線寬／線距</small></span><output id="lsOut"></output><input id="ls" type="range" min="5" max="30" step="1" value="12"></label>
+      <label class="ctl"><span>Via land<small>孔墊直徑</small></span><output id="landOut"></output><input id="land" type="range" min="20" max="80" step="1" value="30"></label>
+      <label class="ctl"><span>Rows to escape<small>要拉出的排數</small></span><output id="rowsOut"></output><input id="rows" type="range" min="2" max="24" step="1" value="6"></label>
+      <label class="ctl"><span>Farthest probe<small>最遠探針離中心</small></span><output id="reachOut"></output><input id="reach" type="range" min="5" max="75" step="1" value="25"></label>
+      <label class="ctl"><span>Top build-up<small>上方增層</small></span><output id="nTopOut"></output><input id="nTop" type="range" min="2" max="12" step="1" value="6"></label>
+      <label class="ctl"><span>Bottom build-up<small>下方增層</small></span><output id="nBotOut"></output><input id="nBot" type="range" min="2" max="12" step="1" value="6"></label>
+      <label class="ctl"><span>Copper balance<small>上下銅量差</small></span><output id="balOut"></output><input id="bal" type="range" min="-40" max="40" step="1" value="0"></label>
+      <label class="ctl"><span>Temperature<small>測試溫度</small></span><output id="tempOut"></output><input id="temp" type="range" min="-40" max="150" step="1" value="25"></label>
+      <div class="ctl full"><span>Substrate<small>載板</small></span><output id="techOut"></output><div class="seg" id="segTech"><button data-v="mlo-low">MLO 低膨脹材料</button><button data-v="mlo-std">MLO 一般材料</button><button data-v="mlc">陶瓷 MLC</button></div></div>
+      <label class="ctl full"><span>Explode<small>拆解</small></span><output id="exOut">0%</output><input id="explode" type="range" min="0" max="100" step="1" value="0"></label>
+      <div class="row full"><button id="tComp" class="tog">Scale for 125 °C 依 125 °C 縮放</button><button id="tCut" class="tog">Cut open 剖開</button></div>
+      <div class="row full"><button id="tTrace" class="tog">Trace signal 訊號路徑</button><button id="tLabels" class="tog on">Labels 標籤</button></div>
+      <div class="row full"><button id="tour" class="btn primary">▶ Guided tour 導覽</button><button id="buildBtn" class="btn">▶ Build it 看它怎麼做</button><button id="refsBtn" class="btn">參數依據 Sources</button></div>
+      <div class="row full"><a class="btn" href="../">← 探針卡 Probe card</a><a class="btn" href="../ft/">成品測試板 FT</a><a class="btn" href="../si/">訊號與電源</a><a class="btn" href="../game/">🎮 遊戲</a></div>
     </div>
     <div class="foot" id="foot"></div>
   </aside>
